@@ -74,6 +74,10 @@ export function createFlyntlyChatApi(config) {
             token,
             fallbackError: 'Failed to fetch threads',
         }),
+        fetchUserThreads: (token) => requestJson(buildChatUrl('/threads'), {
+            token,
+            fallbackError: 'Failed to load threads',
+        }),
         addThreadReply: ({ channelId, parentMessageId, token, text, attachmentIds }) => requestJson(buildChatUrl(`/channels/${channelId}/threads`), {
             method: 'POST',
             token,

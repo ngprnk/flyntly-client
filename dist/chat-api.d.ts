@@ -66,6 +66,43 @@ export interface ReactionsResponse {
 export interface ThreadsResponse {
     threads: unknown[];
 }
+export interface ThreadAuthorRecord {
+    id: string;
+    email: string;
+    firstName?: string;
+    first_name?: string;
+    lastName?: string;
+    last_name?: string;
+    fullName?: string;
+    full_name?: string;
+}
+export interface UserThreadLatestReplyRecord {
+    id: string;
+    user_id: string;
+    text: string | null;
+    timestamp: number;
+    author?: ThreadAuthorRecord | null;
+}
+export interface UserThreadSummaryRecord {
+    id: string;
+    parent_message_id: string;
+    channel_id: string;
+    channel_name: string;
+    is_dm: boolean;
+    is_public: boolean;
+    parent_text: string | null;
+    parent_user_id: string;
+    parent_author?: ThreadAuthorRecord | null;
+    parent_timestamp: number;
+    reply_count: number;
+    latest_reply?: UserThreadLatestReplyRecord | null;
+    participant_ids: string[];
+    participant_authors: ThreadAuthorRecord[];
+    unread: boolean;
+}
+export interface UserThreadsResponse {
+    threads: UserThreadSummaryRecord[];
+}
 export interface MentionRecord {
     id: string;
     message_id: string;
@@ -156,6 +193,7 @@ export interface FlyntlyChatApi {
         parentMessageId: string;
         token: string;
     }) => Promise<ThreadsResponse>;
+    fetchUserThreads: <TResponse = UserThreadsResponse>(token: string) => Promise<TResponse>;
     addThreadReply: (input: {
         channelId: string;
         parentMessageId: string;
