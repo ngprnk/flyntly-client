@@ -126,6 +126,10 @@ export function createFlyntlyChatApi(config) {
             token,
             fallbackError: 'Failed to remove bookmark',
         }),
+        fetchMentions: (token) => requestJson(buildChatUrl('/mentions'), {
+            token,
+            fallbackError: 'Failed to load mentions',
+        }),
         searchMessages: ({ channelId, token, query }) => requestJson(buildChatUrl(`/channels/${channelId}/messages/search`, { query: { q: query } }), {
             token,
             fallbackError: 'Failed to search messages',

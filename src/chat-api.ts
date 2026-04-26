@@ -80,6 +80,25 @@ export interface ThreadsResponse {
   threads: unknown[];
 }
 
+export interface MentionRecord {
+  id: string;
+  message_id: string;
+  channel_id: string;
+  channel_name: string;
+  is_dm: boolean;
+  message_text: string | null;
+  message_user_id: string;
+  message_user_name?: string | null;
+  message_user_email?: string | null;
+  timestamp: number;
+  unread: boolean;
+  mention_kind: 'direct' | 'channel';
+}
+
+export interface MentionsResponse {
+  mentions: MentionRecord[];
+}
+
 export interface FlyntlyChatApi {
   buildChatUrl: (...args: BuildUrlArg[]) => string;
   fetchChannelBootstrap: (input: { channelId: string; token: string }) => Promise<ChannelBootstrapResponse>;
@@ -108,6 +127,7 @@ export interface FlyntlyChatApi {
   fetchAllBookmarks: (token: string) => Promise<AllBookmarksResponse>;
   addBookmark: (input: { channelId: string; messageId: string; token: string }) => Promise<unknown>;
   deleteBookmark: (input: { bookmarkId: string; token: string }) => Promise<void>;
+  fetchMentions: <TResponse = MentionsResponse>(token: string) => Promise<TResponse>;
   searchMessages: <TResponse>(input: { channelId: string; token: string; query: string }) => Promise<TResponse>;
   createPoll: <TResponse>(input: { channelId: string; token: string; body: unknown }) => Promise<TResponse>;
   votePoll: <TResponse>(input: { token: string; body: unknown }) => Promise<TResponse>;
@@ -246,6 +266,10 @@ export function createFlyntlyChatApi(config: FlyntlyChatApiConfig): FlyntlyChatA
       method: 'DELETE',
       token,
       fallbackError: 'Failed to remove bookmark',
+    }),
+    fetchMentions: (token) => requestJson(buildChatUrl('/mentions'), {
+      token,
+      fallbackError: 'Failed to load mentions',
     }),
     searchMessages: ({ channelId, token, query }) =>
       requestJson(buildChatUrl(`/channels/${channelId}/messages/search`, { query: { q: query } }), {

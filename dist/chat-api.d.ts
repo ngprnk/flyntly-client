@@ -66,6 +66,23 @@ export interface ReactionsResponse {
 export interface ThreadsResponse {
     threads: unknown[];
 }
+export interface MentionRecord {
+    id: string;
+    message_id: string;
+    channel_id: string;
+    channel_name: string;
+    is_dm: boolean;
+    message_text: string | null;
+    message_user_id: string;
+    message_user_name?: string | null;
+    message_user_email?: string | null;
+    timestamp: number;
+    unread: boolean;
+    mention_kind: 'direct' | 'channel';
+}
+export interface MentionsResponse {
+    mentions: MentionRecord[];
+}
 export interface FlyntlyChatApi {
     buildChatUrl: (...args: BuildUrlArg[]) => string;
     fetchChannelBootstrap: (input: {
@@ -186,6 +203,7 @@ export interface FlyntlyChatApi {
         bookmarkId: string;
         token: string;
     }) => Promise<void>;
+    fetchMentions: <TResponse = MentionsResponse>(token: string) => Promise<TResponse>;
     searchMessages: <TResponse>(input: {
         channelId: string;
         token: string;
