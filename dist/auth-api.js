@@ -12,6 +12,12 @@ export function createFlyntlyAuthApi(config) {
             token,
             fallbackError: 'Failed to load profile',
         }),
+        switchOrg: ({ token, orgId }) => requestJson(buildUrl('/auth/switch-org'), {
+            method: 'POST',
+            token,
+            body: { orgId },
+            fallbackError: 'Failed to switch workspace',
+        }),
         logout: (token) => requestVoid(buildUrl('/auth/logout'), {
             method: 'POST',
             token,

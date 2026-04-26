@@ -23,6 +23,12 @@ export interface CurrentUserResponse {
         lastName?: string | null;
     };
 }
+export interface SwitchOrganizationResponse {
+    success: true;
+    token: string;
+    orgId: string;
+    orgName: string;
+}
 export interface FlyntlyAuthApi {
     login: (input: {
         email: string;
@@ -30,6 +36,10 @@ export interface FlyntlyAuthApi {
         preferredOrgId?: string | null;
     }) => Promise<LoginResponse>;
     me: (token: string) => Promise<CurrentUserResponse>;
+    switchOrg: (input: {
+        token: string;
+        orgId: string;
+    }) => Promise<SwitchOrganizationResponse>;
     logout: (token: string) => Promise<void>;
 }
 export declare function createFlyntlyAuthApi(config: FlyntlyAuthApiConfig): FlyntlyAuthApi;

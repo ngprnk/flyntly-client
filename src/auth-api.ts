@@ -30,9 +30,17 @@ export interface CurrentUserResponse {
   };
 }
 
+export interface SwitchOrganizationResponse {
+  success: true;
+  token: string;
+  orgId: string;
+  orgName: string;
+}
+
 export interface FlyntlyAuthApi {
   login: (input: { email: string; password: string; preferredOrgId?: string | null }) => Promise<LoginResponse>;
   me: (token: string) => Promise<CurrentUserResponse>;
+  switchOrg: (input: { token: string; orgId: string }) => Promise<SwitchOrganizationResponse>;
   logout: (token: string) => Promise<void>;
 }
 
@@ -50,6 +58,13 @@ export function createFlyntlyAuthApi(config: FlyntlyAuthApiConfig): FlyntlyAuthA
       requestJson<CurrentUserResponse>(buildUrl('/auth/me'), {
         token,
         fallbackError: 'Failed to load profile',
+      }),
+    switchOrg: ({ token, orgId }) =>
+      requestJson<SwitchOrganizationResponse>(buildUrl('/auth/switch-org'), {
+        method: 'POST',
+        token,
+        body: { orgId },
+        fallbackError: 'Failed to switch workspace',
       }),
     logout: (token) =>
       requestVoid(buildUrl('/auth/logout'), {
