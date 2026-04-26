@@ -1,4 +1,4 @@
-import type { WSEventCallbacks } from './ws-types';
+import type { WSEventCallbacks } from './ws-types.js';
 export declare class WSCallbackRegistry {
     private readonly callbacks;
     subscribe<K extends keyof WSEventCallbacks>(event: K, callback: WSEventCallbacks[K]): () => void;

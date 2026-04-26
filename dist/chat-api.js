@@ -1,5 +1,5 @@
-import { createUrlBuilder } from './url';
-import { requestJson, requestVoid } from './http';
+import { createUrlBuilder } from './url.js';
+import { requestJson, requestVoid } from './http.js';
 export function createFlyntlyChatApi(config) {
     const buildChatUrl = createUrlBuilder(config.chatApiUrl);
     return {

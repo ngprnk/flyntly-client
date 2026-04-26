@@ -1,4 +1,4 @@
-import type { BuildUrlArg } from './url';
+import type { BuildUrlArg } from './url.js';
 export interface FlyntlyChatApiConfig {
     chatApiUrl: string;
 }

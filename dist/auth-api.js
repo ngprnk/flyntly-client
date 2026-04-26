@@ -1,5 +1,5 @@
-import { requestJson, requestVoid } from './http';
-import { createUrlBuilder } from './url';
+import { requestJson, requestVoid } from './http.js';
+import { createUrlBuilder } from './url.js';
 export function createFlyntlyAuthApi(config) {
     const buildUrl = createUrlBuilder(config.baseApiUrl);
     return {

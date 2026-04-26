@@ -1,4 +1,4 @@
-import { WSCallbackRegistry } from './ws-callback-registry';
+import { WSCallbackRegistry } from './ws-callback-registry.js';
 import type {
   RawMessageEditPayload,
   RawMessagePayload,
@@ -6,7 +6,7 @@ import type {
   RawReactionPayload,
   RawThreadPayload,
   WSMessageQueueItem,
-} from './ws-types';
+} from './ws-types.js';
 
 export interface FlyntlyWebSocketManagerOptions {
   url: string;

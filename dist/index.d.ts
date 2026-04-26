@@ -1,8 +1,9 @@
-export * from './url';
-export * from './http';
-export * from './auth-api';
-export * from './chat-api';
-export * from './ws-types';
-export * from './ws-callback-registry';
-export * from './ws-client';
+export * from './url.js';
+export * from './http.js';
+export * from './auth-api.js';
+export * from './chat-api.js';
+export * from './ws-types.js';
+export * from './ws-callback-registry.js';
+export * from './ws-client.js';
+export * from './reactions.js';
 //# sourceMappingURL=index.d.ts.map

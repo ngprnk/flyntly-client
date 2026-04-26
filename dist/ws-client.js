@@ -1,4 +1,4 @@
-import { WSCallbackRegistry } from './ws-callback-registry';
+import { WSCallbackRegistry } from './ws-callback-registry.js';
 function getDefaultTimezone() {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
 }

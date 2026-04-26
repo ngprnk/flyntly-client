@@ -1,4 +1,4 @@
-import type { WSEventCallbacks } from './ws-types';
+import type { WSEventCallbacks } from './ws-types.js';
 
 export class WSCallbackRegistry {
   private readonly callbacks: {

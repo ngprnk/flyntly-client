@@ -1,5 +1,5 @@
-import { WSCallbackRegistry } from './ws-callback-registry';
-import type { RawMessageEditPayload, RawMessagePayload, RawPinPayload, RawReactionPayload, RawThreadPayload } from './ws-types';
+import { WSCallbackRegistry } from './ws-callback-registry.js';
+import type { RawMessageEditPayload, RawMessagePayload, RawPinPayload, RawReactionPayload, RawThreadPayload } from './ws-types.js';
 export interface FlyntlyWebSocketManagerOptions {
     url: string;
     getTimezone?: () => string;

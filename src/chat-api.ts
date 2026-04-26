@@ -1,6 +1,6 @@
-import type { BuildUrlArg } from './url';
-import { createUrlBuilder } from './url';
-import { requestJson, requestVoid } from './http';
+import type { BuildUrlArg } from './url.js';
+import { createUrlBuilder } from './url.js';
+import { requestJson, requestVoid } from './http.js';
 
 export interface FlyntlyChatApiConfig {
   chatApiUrl: string;
