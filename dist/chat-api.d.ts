@@ -102,6 +102,8 @@ export interface UserThreadSummaryRecord {
 }
 export interface UserThreadsResponse {
     threads: UserThreadSummaryRecord[];
+    next_cursor?: string | null;
+    has_more?: boolean;
 }
 export interface MentionRecord {
     id: string;
@@ -119,6 +121,14 @@ export interface MentionRecord {
 }
 export interface MentionsResponse {
     mentions: MentionRecord[];
+    next_cursor?: string | null;
+    has_more?: boolean;
+}
+export interface InboxPageRequest {
+    token: string;
+    limit?: number;
+    before?: string | null;
+    cursor?: string | null;
 }
 export interface FlyntlyChatApi {
     buildChatUrl: (...args: BuildUrlArg[]) => string;
@@ -193,7 +203,7 @@ export interface FlyntlyChatApi {
         parentMessageId: string;
         token: string;
     }) => Promise<ThreadsResponse>;
-    fetchUserThreads: <TResponse = UserThreadsResponse>(token: string) => Promise<TResponse>;
+    fetchUserThreads: <TResponse = UserThreadsResponse>(input: string | InboxPageRequest) => Promise<TResponse>;
     addThreadReply: (input: {
         channelId: string;
         parentMessageId: string;
@@ -241,7 +251,7 @@ export interface FlyntlyChatApi {
         bookmarkId: string;
         token: string;
     }) => Promise<void>;
-    fetchMentions: <TResponse = MentionsResponse>(token: string) => Promise<TResponse>;
+    fetchMentions: <TResponse = MentionsResponse>(input: string | InboxPageRequest) => Promise<TResponse>;
     searchMessages: <TResponse>(input: {
         channelId: string;
         token: string;

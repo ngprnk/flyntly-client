@@ -74,10 +74,13 @@ export function createFlyntlyChatApi(config) {
             token,
             fallbackError: 'Failed to fetch threads',
         }),
-        fetchUserThreads: (token) => requestJson(buildChatUrl('/threads'), {
-            token,
-            fallbackError: 'Failed to load threads',
-        }),
+        fetchUserThreads: (input) => {
+            const page = normalizeInboxPageRequest(input);
+            return requestJson(buildChatUrl('/threads', { query: inboxPageQuery(page) }), {
+                token: page.token,
+                fallbackError: 'Failed to load threads',
+            });
+        },
         addThreadReply: ({ channelId, parentMessageId, token, text, attachmentIds }) => requestJson(buildChatUrl(`/channels/${channelId}/threads`), {
             method: 'POST',
             token,
@@ -130,10 +133,13 @@ export function createFlyntlyChatApi(config) {
             token,
             fallbackError: 'Failed to remove bookmark',
         }),
-        fetchMentions: (token) => requestJson(buildChatUrl('/mentions'), {
-            token,
-            fallbackError: 'Failed to load mentions',
-        }),
+        fetchMentions: (input) => {
+            const page = normalizeInboxPageRequest(input);
+            return requestJson(buildChatUrl('/mentions', { query: inboxPageQuery(page) }), {
+                token: page.token,
+                fallbackError: 'Failed to load mentions',
+            });
+        },
         searchMessages: ({ channelId, token, query }) => requestJson(buildChatUrl(`/channels/${channelId}/messages/search`, { query: { q: query } }), {
             token,
             fallbackError: 'Failed to search messages',
@@ -150,6 +156,18 @@ export function createFlyntlyChatApi(config) {
             body,
             fallbackError: 'Failed to vote in poll',
         }),
+    };
+}
+function normalizeInboxPageRequest(input) {
+    if (typeof input === 'string') {
+        return { token: input };
+    }
+    return input;
+}
+function inboxPageQuery(input) {
+    return {
+        limit: input.limit,
+        before: input.before ?? input.cursor,
     };
 }
 //# sourceMappingURL=chat-api.js.map

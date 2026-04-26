@@ -119,6 +119,8 @@ export interface UserThreadSummaryRecord {
 
 export interface UserThreadsResponse {
   threads: UserThreadSummaryRecord[];
+  next_cursor?: string | null;
+  has_more?: boolean;
 }
 
 export interface MentionRecord {
@@ -138,6 +140,15 @@ export interface MentionRecord {
 
 export interface MentionsResponse {
   mentions: MentionRecord[];
+  next_cursor?: string | null;
+  has_more?: boolean;
+}
+
+export interface InboxPageRequest {
+  token: string;
+  limit?: number;
+  before?: string | null;
+  cursor?: string | null;
 }
 
 export interface FlyntlyChatApi {
@@ -157,7 +168,7 @@ export interface FlyntlyChatApi {
   toggleReaction: (input: { channelId: string; messageId: string; token: string; emoji: string; op: 'add' | 'remove' }) => Promise<void>;
   fetchMessageReactions: (input: { channelId: string; messageId: string; token: string }) => Promise<ReactionsResponse>;
   fetchThreads: (input: { channelId: string; parentMessageId: string; token: string }) => Promise<ThreadsResponse>;
-  fetchUserThreads: <TResponse = UserThreadsResponse>(token: string) => Promise<TResponse>;
+  fetchUserThreads: <TResponse = UserThreadsResponse>(input: string | InboxPageRequest) => Promise<TResponse>;
   addThreadReply: (input: { channelId: string; parentMessageId: string; token: string; text: string; attachmentIds?: string[] }) => Promise<SentThreadReplyResponse>;
   editThreadReply: (input: { channelId: string; threadId: string; token: string; text: string }) => Promise<void>;
   deleteThreadReply: (input: { channelId: string; threadId: string; token: string }) => Promise<void>;
@@ -169,7 +180,7 @@ export interface FlyntlyChatApi {
   fetchAllBookmarks: (token: string) => Promise<AllBookmarksResponse>;
   addBookmark: (input: { channelId: string; messageId: string; token: string }) => Promise<unknown>;
   deleteBookmark: (input: { bookmarkId: string; token: string }) => Promise<void>;
-  fetchMentions: <TResponse = MentionsResponse>(token: string) => Promise<TResponse>;
+  fetchMentions: <TResponse = MentionsResponse>(input: string | InboxPageRequest) => Promise<TResponse>;
   searchMessages: <TResponse>(input: { channelId: string; token: string; query: string }) => Promise<TResponse>;
   createPoll: <TResponse>(input: { channelId: string; token: string; body: unknown }) => Promise<TResponse>;
   votePoll: <TResponse>(input: { token: string; body: unknown }) => Promise<TResponse>;
@@ -254,10 +265,13 @@ export function createFlyntlyChatApi(config: FlyntlyChatApiConfig): FlyntlyChatA
         token,
         fallbackError: 'Failed to fetch threads',
       }),
-    fetchUserThreads: (token) => requestJson(buildChatUrl('/threads'), {
-      token,
-      fallbackError: 'Failed to load threads',
-    }),
+    fetchUserThreads: (input) => {
+      const page = normalizeInboxPageRequest(input);
+      return requestJson(buildChatUrl('/threads', { query: inboxPageQuery(page) }), {
+        token: page.token,
+        fallbackError: 'Failed to load threads',
+      });
+    },
     addThreadReply: ({ channelId, parentMessageId, token, text, attachmentIds }) =>
       requestJson(buildChatUrl(`/channels/${channelId}/threads`), {
         method: 'POST',
@@ -313,10 +327,13 @@ export function createFlyntlyChatApi(config: FlyntlyChatApiConfig): FlyntlyChatA
       token,
       fallbackError: 'Failed to remove bookmark',
     }),
-    fetchMentions: (token) => requestJson(buildChatUrl('/mentions'), {
-      token,
-      fallbackError: 'Failed to load mentions',
-    }),
+    fetchMentions: (input) => {
+      const page = normalizeInboxPageRequest(input);
+      return requestJson(buildChatUrl('/mentions', { query: inboxPageQuery(page) }), {
+        token: page.token,
+        fallbackError: 'Failed to load mentions',
+      });
+    },
     searchMessages: ({ channelId, token, query }) =>
       requestJson(buildChatUrl(`/channels/${channelId}/messages/search`, { query: { q: query } }), {
         token,
@@ -334,5 +351,20 @@ export function createFlyntlyChatApi(config: FlyntlyChatApiConfig): FlyntlyChatA
       body,
       fallbackError: 'Failed to vote in poll',
     }),
+  };
+}
+
+function normalizeInboxPageRequest(input: string | InboxPageRequest): InboxPageRequest {
+  if (typeof input === 'string') {
+    return { token: input };
+  }
+
+  return input;
+}
+
+function inboxPageQuery(input: InboxPageRequest): Record<string, string | number | null | undefined> {
+  return {
+    limit: input.limit,
+    before: input.before ?? input.cursor,
   };
 }
