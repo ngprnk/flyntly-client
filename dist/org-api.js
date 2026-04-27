@@ -7,6 +7,16 @@ export function createFlyntlyOrgApi(config) {
             token,
             fallbackError: 'Failed to load workspace members',
         }),
+        archiveOrganization: ({ orgId, token }) => requestJson(buildUrl(`/orgs/${orgId}/archive`), {
+            method: 'POST',
+            token,
+            fallbackError: 'Failed to archive workspace',
+        }),
+        deleteOrganization: ({ orgId, token }) => requestJson(buildUrl(`/orgs/${orgId}`), {
+            method: 'DELETE',
+            token,
+            fallbackError: 'Failed to delete workspace',
+        }),
     };
 }
 //# sourceMappingURL=org-api.js.map

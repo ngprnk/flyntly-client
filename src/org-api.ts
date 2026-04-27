@@ -18,8 +18,17 @@ export interface OrgMembersResponse {
   members: OrgMemberResponse[];
 }
 
+export interface OrganizationActionResponse {
+  success: true;
+  token: string;
+  orgId: string | null;
+  needsOrganization: boolean;
+}
+
 export interface FlyntlyOrgApi {
   listMembers: (input: { orgId: string; token: string }) => Promise<OrgMembersResponse>;
+  archiveOrganization: (input: { orgId: string; token: string }) => Promise<OrganizationActionResponse>;
+  deleteOrganization: (input: { orgId: string; token: string }) => Promise<OrganizationActionResponse>;
 }
 
 export function createFlyntlyOrgApi(config: FlyntlyOrgApiConfig): FlyntlyOrgApi {
@@ -30,6 +39,18 @@ export function createFlyntlyOrgApi(config: FlyntlyOrgApiConfig): FlyntlyOrgApi 
       requestJson<OrgMembersResponse>(buildUrl(`/orgs/${orgId}/members`), {
         token,
         fallbackError: 'Failed to load workspace members',
+      }),
+    archiveOrganization: ({ orgId, token }) =>
+      requestJson<OrganizationActionResponse>(buildUrl(`/orgs/${orgId}/archive`), {
+        method: 'POST',
+        token,
+        fallbackError: 'Failed to archive workspace',
+      }),
+    deleteOrganization: ({ orgId, token }) =>
+      requestJson<OrganizationActionResponse>(buildUrl(`/orgs/${orgId}`), {
+        method: 'DELETE',
+        token,
+        fallbackError: 'Failed to delete workspace',
       }),
   };
 }
