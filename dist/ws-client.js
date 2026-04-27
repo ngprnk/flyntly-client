@@ -256,6 +256,9 @@ export class FlyntlyWebSocketManager {
     onMessageUnpinned(callback) {
         return this.callbacks.subscribe('messageUnpinned', callback);
     }
+    onAttachmentTranscodeUpdated(callback) {
+        return this.callbacks.subscribe('attachmentTranscodeUpdated', callback);
+    }
 }
 export function createFlyntlyWebSocketManager(options) {
     return new FlyntlyWebSocketManager(options);

@@ -25,6 +25,13 @@ export interface SentMessageResponse {
       contentType: string;
       bucket: string;
       uploadedBy: string;
+      transcodedUrl?: string | null;
+      transcodedKey?: string | null;
+      transcodedContentType?: string | null;
+      transcodeStatus?: string | null;
+      transcodeError?: string | null;
+      transcodeAttempts?: number | string | null;
+      transcodedAt?: number | string | null;
     }>;
   };
 }

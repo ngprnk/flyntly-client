@@ -56,6 +56,19 @@ export interface RawPinPayload {
   pinnedAt: string;
 }
 
+export interface RawAttachmentTranscodeUpdatePayload {
+  id: string;
+  key?: string | null;
+  transcodedUrl?: string | null;
+  transcoded_url?: string | null;
+  transcodedContentType?: string | null;
+  transcoded_content_type?: string | null;
+  transcodeStatus?: string | null;
+  transcode_status?: string | null;
+  transcodeError?: string | null;
+  transcode_error?: string | null;
+}
+
 export interface WSMessageQueueItem {
   channelId: string;
   update: string;
@@ -75,6 +88,13 @@ export interface WSEventCallbacks {
   reactionToggled: (channelId: string, messageId: string, reactions: RawReactionPayload[]) => void;
   messagePinned: (channelId: string, pin: RawPinPayload) => void;
   messageUnpinned: (channelId: string, messageId: string) => void;
+  attachmentTranscodeUpdated: (
+    channelId: string,
+    attachment: RawAttachmentTranscodeUpdatePayload,
+    messageIds: string[],
+    threadReplyIds: string[],
+    parentMessageIds: string[],
+  ) => void;
 }
 
 export type ServerMessage =
@@ -99,5 +119,13 @@ export type ServerMessage =
   | { type: 'reaction-toggled'; channelId: string; messageId: string; reactions: RawReactionPayload[] }
   | { type: 'message-pinned'; channelId: string; pin: RawPinPayload }
   | { type: 'message-unpinned'; channelId: string; messageId: string }
+  | {
+      type: 'attachment-transcode-updated';
+      channelId: string;
+      attachment: RawAttachmentTranscodeUpdatePayload;
+      messageIds?: string[];
+      threadReplyIds?: string[];
+      parentMessageIds?: string[];
+    }
   | { type: 'joined'; channelId?: string }
   | { type: 'error'; error: string };

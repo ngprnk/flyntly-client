@@ -2,6 +2,7 @@ import { WSCallbackRegistry } from './ws-callback-registry.js';
 import type {
   RawMessageEditPayload,
   RawMessagePayload,
+  RawAttachmentTranscodeUpdatePayload,
   RawPinPayload,
   RawReactionPayload,
   RawThreadPayload,
@@ -339,6 +340,18 @@ export class FlyntlyWebSocketManager {
 
   onMessageUnpinned(callback: (channelId: string, messageId: string) => void): () => void {
     return this.callbacks.subscribe('messageUnpinned', callback);
+  }
+
+  onAttachmentTranscodeUpdated(
+    callback: (
+      channelId: string,
+      attachment: RawAttachmentTranscodeUpdatePayload,
+      messageIds: string[],
+      threadReplyIds: string[],
+      parentMessageIds: string[],
+    ) => void,
+  ): () => void {
+    return this.callbacks.subscribe('attachmentTranscodeUpdated', callback);
   }
 }
 

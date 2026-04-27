@@ -1,5 +1,5 @@
 import { WSCallbackRegistry } from './ws-callback-registry.js';
-import type { RawMessageEditPayload, RawMessagePayload, RawPinPayload, RawReactionPayload, RawThreadPayload } from './ws-types.js';
+import type { RawMessageEditPayload, RawMessagePayload, RawAttachmentTranscodeUpdatePayload, RawPinPayload, RawReactionPayload, RawThreadPayload } from './ws-types.js';
 export interface FlyntlyWebSocketManagerOptions {
     url: string;
     getTimezone?: () => string;
@@ -52,6 +52,7 @@ export declare class FlyntlyWebSocketManager {
     onReactionToggled(callback: (channelId: string, messageId: string, reactions: RawReactionPayload[]) => void): () => void;
     onMessagePinned(callback: (channelId: string, pin: RawPinPayload) => void): () => void;
     onMessageUnpinned(callback: (channelId: string, messageId: string) => void): () => void;
+    onAttachmentTranscodeUpdated(callback: (channelId: string, attachment: RawAttachmentTranscodeUpdatePayload, messageIds: string[], threadReplyIds: string[], parentMessageIds: string[]) => void): () => void;
 }
 export declare function createFlyntlyWebSocketManager(options: FlyntlyWebSocketManagerOptions): FlyntlyWebSocketManager;
 //# sourceMappingURL=ws-client.d.ts.map
