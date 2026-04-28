@@ -60,11 +60,37 @@ export interface OrganizationInvitationsResponse {
   invitations: OrganizationInvitationResponse[];
 }
 
+export interface WorkspaceUserStatus {
+  orgId: string;
+  userId: string;
+  statusText: string;
+  statusEmoji: string | null;
+  expiresAt: number | null;
+  pauseNotifications: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface WorkspaceUserStatusResponse {
+  status: WorkspaceUserStatus | null;
+}
+
+export interface SetWorkspaceUserStatusInput {
+  token: string;
+  statusText: string;
+  statusEmoji?: string | null;
+  expiresAt?: number | null;
+  pauseNotifications?: boolean;
+}
+
 export interface FlyntlyOrgApi {
   listMembers: (input: { orgId: string; token: string }) => Promise<OrgMembersResponse>;
   sendInvitations: (input: { token: string; emails: string[]; orgId?: string | null }) => Promise<SendOrganizationInvitationsResponse>;
   listInvitations: (input: { token: string }) => Promise<OrganizationInvitationsResponse>;
   revokeInvitation: (input: { token: string; invitationId: string }) => Promise<{ success: true; message: string }>;
+  getMyStatus: (input: { token: string }) => Promise<WorkspaceUserStatusResponse>;
+  setMyStatus: (input: SetWorkspaceUserStatusInput) => Promise<WorkspaceUserStatusResponse>;
+  clearMyStatus: (input: { token: string }) => Promise<WorkspaceUserStatusResponse>;
   archiveOrganization: (input: { orgId: string; token: string }) => Promise<OrganizationActionResponse>;
   deleteOrganization: (input: { orgId: string; token: string }) => Promise<OrganizationActionResponse>;
 }
@@ -95,6 +121,29 @@ export function createFlyntlyOrgApi(config: FlyntlyOrgApiConfig): FlyntlyOrgApi 
         method: 'DELETE',
         token,
         fallbackError: 'Failed to revoke invitation',
+      }),
+    getMyStatus: ({ token }) =>
+      requestJson<WorkspaceUserStatusResponse>(buildUrl('/profile/status'), {
+        token,
+        fallbackError: 'Failed to load status',
+      }),
+    setMyStatus: ({ token, statusText, statusEmoji, expiresAt, pauseNotifications }) =>
+      requestJson<WorkspaceUserStatusResponse>(buildUrl('/profile/status'), {
+        method: 'PUT',
+        token,
+        body: {
+          statusText,
+          statusEmoji,
+          expiresAt,
+          pauseNotifications,
+        },
+        fallbackError: 'Failed to save status',
+      }),
+    clearMyStatus: ({ token }) =>
+      requestJson<WorkspaceUserStatusResponse>(buildUrl('/profile/status'), {
+        method: 'DELETE',
+        token,
+        fallbackError: 'Failed to clear status',
       }),
     archiveOrganization: ({ orgId, token }) =>
       requestJson<OrganizationActionResponse>(buildUrl(`/orgs/${orgId}/archive`), {

@@ -50,6 +50,26 @@ export interface OrganizationInvitationResponse {
 export interface OrganizationInvitationsResponse {
     invitations: OrganizationInvitationResponse[];
 }
+export interface WorkspaceUserStatus {
+    orgId: string;
+    userId: string;
+    statusText: string;
+    statusEmoji: string | null;
+    expiresAt: number | null;
+    pauseNotifications: boolean;
+    createdAt: number;
+    updatedAt: number;
+}
+export interface WorkspaceUserStatusResponse {
+    status: WorkspaceUserStatus | null;
+}
+export interface SetWorkspaceUserStatusInput {
+    token: string;
+    statusText: string;
+    statusEmoji?: string | null;
+    expiresAt?: number | null;
+    pauseNotifications?: boolean;
+}
 export interface FlyntlyOrgApi {
     listMembers: (input: {
         orgId: string;
@@ -70,6 +90,13 @@ export interface FlyntlyOrgApi {
         success: true;
         message: string;
     }>;
+    getMyStatus: (input: {
+        token: string;
+    }) => Promise<WorkspaceUserStatusResponse>;
+    setMyStatus: (input: SetWorkspaceUserStatusInput) => Promise<WorkspaceUserStatusResponse>;
+    clearMyStatus: (input: {
+        token: string;
+    }) => Promise<WorkspaceUserStatusResponse>;
     archiveOrganization: (input: {
         orgId: string;
         token: string;

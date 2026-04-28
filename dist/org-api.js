@@ -22,6 +22,26 @@ export function createFlyntlyOrgApi(config) {
             token,
             fallbackError: 'Failed to revoke invitation',
         }),
+        getMyStatus: ({ token }) => requestJson(buildUrl('/profile/status'), {
+            token,
+            fallbackError: 'Failed to load status',
+        }),
+        setMyStatus: ({ token, statusText, statusEmoji, expiresAt, pauseNotifications }) => requestJson(buildUrl('/profile/status'), {
+            method: 'PUT',
+            token,
+            body: {
+                statusText,
+                statusEmoji,
+                expiresAt,
+                pauseNotifications,
+            },
+            fallbackError: 'Failed to save status',
+        }),
+        clearMyStatus: ({ token }) => requestJson(buildUrl('/profile/status'), {
+            method: 'DELETE',
+            token,
+            fallbackError: 'Failed to clear status',
+        }),
         archiveOrganization: ({ orgId, token }) => requestJson(buildUrl(`/orgs/${orgId}/archive`), {
             method: 'POST',
             token,
