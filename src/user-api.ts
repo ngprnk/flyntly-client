@@ -1,4 +1,5 @@
 import { requestJson } from './http.js';
+import type { WorkspaceUserStatus } from './org-api.js';
 import { createUrlBuilder } from './url.js';
 
 export interface FlyntlyUserApiConfig {
@@ -19,6 +20,7 @@ export interface UserProfileRecord {
   timezone?: string | null;
   lastSeenAt?: string | number | null;
   last_seen_at?: string | number | null;
+  workspaceStatus?: WorkspaceUserStatus | null;
 }
 
 export interface UserProfileResponse {

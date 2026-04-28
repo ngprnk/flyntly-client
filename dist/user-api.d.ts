@@ -1,3 +1,4 @@
+import type { WorkspaceUserStatus } from './org-api.js';
 export interface FlyntlyUserApiConfig {
     baseApiUrl: string;
 }
@@ -15,6 +16,7 @@ export interface UserProfileRecord {
     timezone?: string | null;
     lastSeenAt?: string | number | null;
     last_seen_at?: string | number | null;
+    workspaceStatus?: WorkspaceUserStatus | null;
 }
 export interface UserProfileResponse {
     user: UserProfileRecord;
