@@ -7,6 +7,21 @@ export function createFlyntlyOrgApi(config) {
             token,
             fallbackError: 'Failed to load workspace members',
         }),
+        sendInvitations: ({ token, emails, orgId }) => requestJson(buildUrl('/invitations/send'), {
+            method: 'POST',
+            token,
+            body: orgId ? { emails, orgId } : { emails },
+            fallbackError: 'Failed to send invitations',
+        }),
+        listInvitations: ({ token }) => requestJson(buildUrl('/invitations'), {
+            token,
+            fallbackError: 'Failed to load invitations',
+        }),
+        revokeInvitation: ({ token, invitationId }) => requestJson(buildUrl(`/invitations/${invitationId}`), {
+            method: 'DELETE',
+            token,
+            fallbackError: 'Failed to revoke invitation',
+        }),
         archiveOrganization: ({ orgId, token }) => requestJson(buildUrl(`/orgs/${orgId}/archive`), {
             method: 'POST',
             token,
