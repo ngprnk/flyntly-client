@@ -3,9 +3,9 @@ import { createUrlBuilder } from './url.js';
 export function createFlyntlyAuthApi(config) {
     const buildUrl = createUrlBuilder(config.baseApiUrl);
     return {
-        login: ({ email, password, preferredOrgId }) => requestJson(buildUrl('/auth/login'), {
+        login: ({ email, password, preferredOrgId, explicitWorkspaceSelection }) => requestJson(buildUrl('/auth/login'), {
             method: 'POST',
-            body: { email, password, preferredOrgId },
+            body: { email, password, preferredOrgId, explicitWorkspaceSelection },
             fallbackError: 'Login failed',
         }),
         me: (token) => requestJson(buildUrl('/auth/me'), {

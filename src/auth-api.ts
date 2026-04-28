@@ -38,7 +38,12 @@ export interface SwitchOrganizationResponse {
 }
 
 export interface FlyntlyAuthApi {
-  login: (input: { email: string; password: string; preferredOrgId?: string | null }) => Promise<LoginResponse>;
+  login: (input: {
+    email: string;
+    password: string;
+    preferredOrgId?: string | null;
+    explicitWorkspaceSelection?: boolean;
+  }) => Promise<LoginResponse>;
   me: (token: string) => Promise<CurrentUserResponse>;
   switchOrg: (input: { token: string; orgId: string }) => Promise<SwitchOrganizationResponse>;
   logout: (token: string) => Promise<void>;
@@ -48,10 +53,10 @@ export function createFlyntlyAuthApi(config: FlyntlyAuthApiConfig): FlyntlyAuthA
   const buildUrl = createUrlBuilder(config.baseApiUrl);
 
   return {
-    login: ({ email, password, preferredOrgId }) =>
+    login: ({ email, password, preferredOrgId, explicitWorkspaceSelection }) =>
       requestJson<LoginResponse>(buildUrl('/auth/login'), {
         method: 'POST',
-        body: { email, password, preferredOrgId },
+        body: { email, password, preferredOrgId, explicitWorkspaceSelection },
         fallbackError: 'Login failed',
       }),
     me: (token) =>

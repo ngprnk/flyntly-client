@@ -34,6 +34,7 @@ export interface FlyntlyAuthApi {
         email: string;
         password: string;
         preferredOrgId?: string | null;
+        explicitWorkspaceSelection?: boolean;
     }) => Promise<LoginResponse>;
     me: (token: string) => Promise<CurrentUserResponse>;
     switchOrg: (input: {
