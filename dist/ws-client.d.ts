@@ -1,5 +1,5 @@
 import { WSCallbackRegistry } from './ws-callback-registry.js';
-import type { RawMessageEditPayload, RawMessagePayload, RawAttachmentTranscodeUpdatePayload, RawPinPayload, RawReactionPayload, RawThreadPayload } from './ws-types.js';
+import type { RawMessageEditPayload, RawMessagePayload, RawAttachmentTranscodeUpdatePayload, RawPinPayload, PresenceState, PresenceUserPayload, RawReactionPayload, RawThreadPayload } from './ws-types.js';
 export interface FlyntlyWebSocketManagerOptions {
     url: string;
     getTimezone?: () => string;
@@ -18,6 +18,7 @@ export declare class FlyntlyWebSocketManager {
     private isAuthenticated;
     private authTimeout;
     private reconnectTimeout;
+    private presenceHeartbeatTimeout;
     private readonly messageQueue;
     private readonly callbacks;
     private readonly url;
@@ -25,6 +26,7 @@ export declare class FlyntlyWebSocketManager {
     private readonly onServerMessage?;
     private readonly WebSocketImpl;
     private readonly logger;
+    private presenceState;
     onReconnect: (() => void) | null;
     constructor(options: FlyntlyWebSocketManagerOptions);
     private log;
@@ -38,6 +40,11 @@ export declare class FlyntlyWebSocketManager {
     leaveChannel(channelId: string): void;
     sendMutation(channelId: string, update: string): void;
     markChannelAsRead(channelId: string, timestamp?: number): void;
+    setPresenceState(state: PresenceState): void;
+    private sendPresenceHeartbeat;
+    private schedulePresenceHeartbeat;
+    private stopPresenceHeartbeat;
+    private installVisibilityPresenceListener;
     disconnect(): void;
     onUpdate(callback: (channelId: string) => void): () => void;
     onUnreadUpdate(callback: (channelId: string, count: number) => void): () => void;
@@ -52,6 +59,7 @@ export declare class FlyntlyWebSocketManager {
     onReactionToggled(callback: (channelId: string, messageId: string, reactions: RawReactionPayload[]) => void): () => void;
     onMessagePinned(callback: (channelId: string, pin: RawPinPayload) => void): () => void;
     onMessageUnpinned(callback: (channelId: string, messageId: string) => void): () => void;
+    onPresenceBatch(callback: (users: PresenceUserPayload[]) => void): () => void;
     onAttachmentTranscodeUpdated(callback: (channelId: string, attachment: RawAttachmentTranscodeUpdatePayload, messageIds: string[], threadReplyIds: string[], parentMessageIds: string[]) => void): () => void;
 }
 export declare function createFlyntlyWebSocketManager(options: FlyntlyWebSocketManagerOptions): FlyntlyWebSocketManager;

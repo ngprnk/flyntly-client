@@ -1,4 +1,5 @@
 import type { BuildUrlArg } from './url.js';
+import type { PresenceUserPayload } from './ws-types.js';
 export interface FlyntlyChatApiConfig {
     chatApiUrl: string;
 }
@@ -131,6 +132,44 @@ export interface MentionsResponse {
     next_cursor?: string | null;
     has_more?: boolean;
 }
+export interface ActivityRecord {
+    id: string;
+    kind: 'mention' | 'channel_mention' | 'here_mention' | 'keyword' | 'thread_reply' | 'reaction';
+    sourceType: 'message' | 'thread_reply' | 'reaction';
+    sourceId: string;
+    channelId: string;
+    channelName: string;
+    isDm: boolean;
+    messageId?: string | null;
+    threadId?: string | null;
+    actorUserId: string;
+    actorName?: string | null;
+    actorEmail?: string | null;
+    previewText?: string | null;
+    emoji?: string | null;
+    occurredAt: number;
+    unread: boolean;
+}
+export interface ActivityResponse {
+    activity: ActivityRecord[];
+    next_cursor?: string | null;
+    has_more?: boolean;
+}
+export interface NotificationKeywordRecord {
+    id: string;
+    keyword: string;
+    normalizedKeyword: string;
+    createdAt: number;
+}
+export interface NotificationKeywordsResponse {
+    keywords: NotificationKeywordRecord[];
+}
+export interface NotificationKeywordResponse {
+    keyword: NotificationKeywordRecord;
+}
+export interface PresenceQueryResponse {
+    users: PresenceUserPayload[];
+}
 export interface InboxPageRequest {
     token: string;
     limit?: number;
@@ -259,6 +298,24 @@ export interface FlyntlyChatApi {
         token: string;
     }) => Promise<void>;
     fetchMentions: <TResponse = MentionsResponse>(input: string | InboxPageRequest) => Promise<TResponse>;
+    fetchActivity: <TResponse = ActivityResponse>(input: string | InboxPageRequest) => Promise<TResponse>;
+    markActivityRead: (input: {
+        token: string;
+        ids: string[];
+    }) => Promise<void>;
+    fetchNotificationKeywords: <TResponse = NotificationKeywordsResponse>(token: string) => Promise<TResponse>;
+    createNotificationKeyword: <TResponse = NotificationKeywordResponse>(input: {
+        token: string;
+        keyword: string;
+    }) => Promise<TResponse>;
+    deleteNotificationKeyword: (input: {
+        token: string;
+        keywordId: string;
+    }) => Promise<void>;
+    queryPresence: (input: {
+        token: string;
+        userIds: string[];
+    }) => Promise<PresenceQueryResponse>;
     searchMessages: <TResponse>(input: {
         channelId: string;
         token: string;

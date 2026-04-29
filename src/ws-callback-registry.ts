@@ -17,6 +17,7 @@ export class WSCallbackRegistry {
     reactionToggled: new Set(),
     messagePinned: new Set(),
     messageUnpinned: new Set(),
+    presenceBatch: new Set(),
     attachmentTranscodeUpdated: new Set(),
   };
 

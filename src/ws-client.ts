@@ -4,6 +4,8 @@ import type {
   RawMessagePayload,
   RawAttachmentTranscodeUpdatePayload,
   RawPinPayload,
+  PresenceState,
+  PresenceUserPayload,
   RawReactionPayload,
   RawThreadPayload,
   WSMessageQueueItem,
@@ -36,6 +38,7 @@ export class FlyntlyWebSocketManager {
   private isAuthenticated = false;
   private authTimeout: ReturnType<typeof setTimeout> | null = null;
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+  private presenceHeartbeatTimeout: ReturnType<typeof setTimeout> | null = null;
   private readonly messageQueue: WSMessageQueueItem[] = [];
   private readonly callbacks = new WSCallbackRegistry();
   private readonly url: string;
@@ -43,6 +46,7 @@ export class FlyntlyWebSocketManager {
   private readonly onServerMessage?: FlyntlyWebSocketManagerOptions['onServerMessage'];
   private readonly WebSocketImpl: typeof WebSocket;
   private readonly logger: Pick<Console, 'info' | 'warn' | 'error'>;
+  private presenceState: Extract<PresenceState, 'online' | 'away'> = 'online';
   public onReconnect: (() => void) | null = null;
 
   constructor(options: FlyntlyWebSocketManagerOptions) {
@@ -51,6 +55,7 @@ export class FlyntlyWebSocketManager {
     this.onServerMessage = options.onServerMessage;
     this.WebSocketImpl = options.WebSocketImpl ?? WebSocket;
     this.logger = options.logger ?? console;
+    this.installVisibilityPresenceListener();
   }
 
   private log(level: 'info' | 'warn' | 'error', message: string, extra?: Record<string, unknown>): void {
@@ -123,6 +128,9 @@ export class FlyntlyWebSocketManager {
       if (parsed.type === 'authenticated') {
         this.handleAuthenticated();
       }
+      if (isPresenceBatchMessage(parsed)) {
+        this.callbacks.emit('presenceBatch', parsed.users);
+      }
     } catch {
       // Ignore parse errors here and let the host message handler handle them.
     }
@@ -135,6 +143,7 @@ export class FlyntlyWebSocketManager {
 
   private handleClose(event: CloseEvent): void {
     this.isAuthenticated = false;
+    this.stopPresenceHeartbeat();
 
     if (this.authTimeout) {
       clearTimeout(this.authTimeout);
@@ -193,6 +202,8 @@ export class FlyntlyWebSocketManager {
     }
 
     this.log('info', 'Authenticated');
+    this.sendPresenceHeartbeat();
+    this.schedulePresenceHeartbeat();
 
     for (const channelId of this.subscribedChannels) {
       this.joinChannel(channelId);
@@ -263,6 +274,58 @@ export class FlyntlyWebSocketManager {
     });
   }
 
+  setPresenceState(state: PresenceState): void {
+    const nextState = state === 'away' ? 'away' : 'online';
+    if (this.presenceState === nextState) {
+      return;
+    }
+
+    this.presenceState = nextState;
+    this.sendPresenceHeartbeat();
+  }
+
+  private sendPresenceHeartbeat(): void {
+    if (!isSocketOpen(this.ws) || !this.isAuthenticated) {
+      return;
+    }
+
+    this.sendJson({
+      type: 'presence-heartbeat',
+      state: this.presenceState,
+    });
+  }
+
+  private schedulePresenceHeartbeat(): void {
+    this.stopPresenceHeartbeat();
+    const delayMs = 25_000 + Math.floor(Math.random() * 10_000);
+    this.presenceHeartbeatTimeout = setTimeout(() => {
+      this.presenceHeartbeatTimeout = null;
+      this.sendPresenceHeartbeat();
+      if (this.isAuthenticated) {
+        this.schedulePresenceHeartbeat();
+      }
+    }, delayMs);
+  }
+
+  private stopPresenceHeartbeat(): void {
+    if (!this.presenceHeartbeatTimeout) {
+      return;
+    }
+
+    clearTimeout(this.presenceHeartbeatTimeout);
+    this.presenceHeartbeatTimeout = null;
+  }
+
+  private installVisibilityPresenceListener(): void {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      this.setPresenceState(document.visibilityState === 'hidden' ? 'away' : 'online');
+    });
+  }
+
   disconnect(): void {
     if (this.authTimeout) {
       clearTimeout(this.authTimeout);
@@ -276,6 +339,7 @@ export class FlyntlyWebSocketManager {
 
     this.token = null;
     this.isAuthenticated = false;
+    this.stopPresenceHeartbeat();
     this.subscribedChannels.clear();
     this.pendingReadReceipts.clear();
 
@@ -342,6 +406,10 @@ export class FlyntlyWebSocketManager {
     return this.callbacks.subscribe('messageUnpinned', callback);
   }
 
+  onPresenceBatch(callback: (users: PresenceUserPayload[]) => void): () => void {
+    return this.callbacks.subscribe('presenceBatch', callback);
+  }
+
   onAttachmentTranscodeUpdated(
     callback: (
       channelId: string,
@@ -357,4 +425,8 @@ export class FlyntlyWebSocketManager {
 
 export function createFlyntlyWebSocketManager(options: FlyntlyWebSocketManagerOptions): FlyntlyWebSocketManager {
   return new FlyntlyWebSocketManager(options);
+}
+
+function isPresenceBatchMessage(message: { type?: string }): message is { type: 'presence-batch'; users: PresenceUserPayload[] } {
+  return message.type === 'presence-batch' && Array.isArray((message as { users?: unknown }).users);
 }

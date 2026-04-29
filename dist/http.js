@@ -12,7 +12,18 @@ export function isFlyntlyApiError(error) {
     return error instanceof FlyntlyApiError;
 }
 export async function requestJson(url, options = {}) {
-    const { token, body, headers, fallbackError = 'Request failed', ...requestOptions } = options;
+    const { fallbackError = 'Request failed' } = options;
+    const response = await sendRequest(url, options);
+    await assertOk(response, fallbackError);
+    return (await response.json());
+}
+export async function requestVoid(url, options = {}) {
+    const { fallbackError = 'Request failed' } = options;
+    const response = await sendRequest(url, options);
+    await assertOk(response, fallbackError);
+}
+async function sendRequest(url, options) {
+    const { token, body, headers, fallbackError: _fallbackError, ...requestOptions } = options;
     const resolvedHeaders = new Headers(headers);
     if (token) {
         resolvedHeaders.set('Authorization', `Bearer ${token}`);
@@ -22,18 +33,17 @@ export async function requestJson(url, options = {}) {
         resolvedHeaders.set('Content-Type', 'application/json');
         resolvedBody = JSON.stringify(body);
     }
-    const response = await fetch(url, {
+    return fetch(url, {
         ...requestOptions,
         headers: resolvedHeaders,
         body: resolvedBody,
     });
-    if (!response.ok) {
-        const errorPayload = await response.json().catch(() => null);
-        throw new FlyntlyApiError(errorPayload?.error || fallbackError, response.status, errorPayload);
-    }
-    return (await response.json());
 }
-export async function requestVoid(url, options = {}) {
-    await requestJson(url, options);
+async function assertOk(response, fallbackError) {
+    if (response.ok) {
+        return;
+    }
+    const errorPayload = await response.json().catch(() => null);
+    throw new FlyntlyApiError(errorPayload?.error || fallbackError, response.status, errorPayload);
 }
 //# sourceMappingURL=http.js.map

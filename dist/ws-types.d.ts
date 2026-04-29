@@ -62,6 +62,12 @@ export interface RawAttachmentTranscodeUpdatePayload {
     transcodeError?: string | null;
     transcode_error?: string | null;
 }
+export type PresenceState = 'online' | 'away' | 'offline' | 'unknown';
+export interface PresenceUserPayload {
+    userId: string;
+    presence: PresenceState;
+    lastSeen?: number | null;
+}
 export interface WSMessageQueueItem {
     channelId: string;
     update: string;
@@ -80,6 +86,7 @@ export interface WSEventCallbacks {
     reactionToggled: (channelId: string, messageId: string, reactions: RawReactionPayload[]) => void;
     messagePinned: (channelId: string, pin: RawPinPayload) => void;
     messageUnpinned: (channelId: string, messageId: string) => void;
+    presenceBatch: (users: PresenceUserPayload[]) => void;
     attachmentTranscodeUpdated: (channelId: string, attachment: RawAttachmentTranscodeUpdatePayload, messageIds: string[], threadReplyIds: string[], parentMessageIds: string[]) => void;
 }
 export type ServerMessage = {
@@ -144,6 +151,9 @@ export type ServerMessage = {
     type: 'message-unpinned';
     channelId: string;
     messageId: string;
+} | {
+    type: 'presence-batch';
+    users: PresenceUserPayload[];
 } | {
     type: 'attachment-transcode-updated';
     channelId: string;

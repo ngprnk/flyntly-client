@@ -140,6 +140,40 @@ export function createFlyntlyChatApi(config) {
                 fallbackError: 'Failed to load mentions',
             });
         },
+        fetchActivity: (input) => {
+            const page = normalizeInboxPageRequest(input);
+            return requestJson(buildChatUrl('/activity', { query: inboxPageQuery(page) }), {
+                token: page.token,
+                fallbackError: 'Failed to load activity',
+            });
+        },
+        markActivityRead: ({ token, ids }) => requestVoid(buildChatUrl('/activity/read'), {
+            method: 'POST',
+            token,
+            body: { ids },
+            fallbackError: 'Failed to mark activity read',
+        }),
+        fetchNotificationKeywords: (token) => requestJson(buildChatUrl('/activity/keywords'), {
+            token,
+            fallbackError: 'Failed to load notification keywords',
+        }),
+        createNotificationKeyword: ({ token, keyword }) => requestJson(buildChatUrl('/activity/keywords'), {
+            method: 'POST',
+            token,
+            body: { keyword },
+            fallbackError: 'Failed to save notification keyword',
+        }),
+        deleteNotificationKeyword: ({ token, keywordId }) => requestVoid(buildChatUrl(`/activity/keywords/${keywordId}`), {
+            method: 'DELETE',
+            token,
+            fallbackError: 'Failed to delete notification keyword',
+        }),
+        queryPresence: ({ token, userIds }) => requestJson(buildChatUrl('/presence/query'), {
+            method: 'POST',
+            token,
+            body: { userIds },
+            fallbackError: 'Failed to load presence',
+        }),
         searchMessages: ({ channelId, token, query }) => requestJson(buildChatUrl(`/channels/${channelId}/messages/search`, { query: { q: query } }), {
             token,
             fallbackError: 'Failed to search messages',

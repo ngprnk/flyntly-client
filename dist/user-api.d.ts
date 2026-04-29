@@ -21,11 +21,41 @@ export interface UserProfileRecord {
 export interface UserProfileResponse {
     user: UserProfileRecord;
 }
+export type PushTokenEnvironment = 'development' | 'production';
+export interface RegisterPushDeviceInput {
+    token: string;
+    tokenEnvironment: PushTokenEnvironment;
+    installationId: string;
+    tokenType?: 'apns';
+    platform?: 'ios';
+    appVersion?: string | null;
+    deviceName?: string | null;
+    authToken: string;
+}
+export interface UnregisterPushDeviceInput {
+    tokenEnvironment: PushTokenEnvironment;
+    installationId?: string;
+    token?: string;
+    tokenType?: 'apns';
+    platform?: 'ios';
+    authToken: string;
+}
+export interface RegisterPushDeviceResponse {
+    device: {
+        id: string;
+        platform: 'ios';
+        tokenType: 'apns';
+        tokenEnvironment: PushTokenEnvironment;
+        installationId: string;
+    };
+}
 export interface FlyntlyUserApi {
     fetchUserProfile: (input: {
         userId: string;
         token: string;
     }) => Promise<UserProfileResponse>;
+    registerPushDevice: (input: RegisterPushDeviceInput) => Promise<RegisterPushDeviceResponse>;
+    unregisterPushDevice: (input: UnregisterPushDeviceInput) => Promise<void>;
 }
 export declare function createFlyntlyUserApi(config: FlyntlyUserApiConfig): FlyntlyUserApi;
 //# sourceMappingURL=user-api.d.ts.map

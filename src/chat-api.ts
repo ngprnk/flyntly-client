@@ -1,4 +1,5 @@
 import type { BuildUrlArg } from './url.js';
+import type { PresenceUserPayload } from './ws-types.js';
 import { createUrlBuilder } from './url.js';
 import { requestJson, requestVoid } from './http.js';
 
@@ -151,6 +152,50 @@ export interface MentionsResponse {
   has_more?: boolean;
 }
 
+export interface ActivityRecord {
+  id: string;
+  kind: 'mention' | 'channel_mention' | 'here_mention' | 'keyword' | 'thread_reply' | 'reaction';
+  sourceType: 'message' | 'thread_reply' | 'reaction';
+  sourceId: string;
+  channelId: string;
+  channelName: string;
+  isDm: boolean;
+  messageId?: string | null;
+  threadId?: string | null;
+  actorUserId: string;
+  actorName?: string | null;
+  actorEmail?: string | null;
+  previewText?: string | null;
+  emoji?: string | null;
+  occurredAt: number;
+  unread: boolean;
+}
+
+export interface ActivityResponse {
+  activity: ActivityRecord[];
+  next_cursor?: string | null;
+  has_more?: boolean;
+}
+
+export interface NotificationKeywordRecord {
+  id: string;
+  keyword: string;
+  normalizedKeyword: string;
+  createdAt: number;
+}
+
+export interface NotificationKeywordsResponse {
+  keywords: NotificationKeywordRecord[];
+}
+
+export interface NotificationKeywordResponse {
+  keyword: NotificationKeywordRecord;
+}
+
+export interface PresenceQueryResponse {
+  users: PresenceUserPayload[];
+}
+
 export interface InboxPageRequest {
   token: string;
   limit?: number;
@@ -188,6 +233,12 @@ export interface FlyntlyChatApi {
   addBookmark: (input: { channelId: string; messageId: string; token: string }) => Promise<unknown>;
   deleteBookmark: (input: { bookmarkId: string; token: string }) => Promise<void>;
   fetchMentions: <TResponse = MentionsResponse>(input: string | InboxPageRequest) => Promise<TResponse>;
+  fetchActivity: <TResponse = ActivityResponse>(input: string | InboxPageRequest) => Promise<TResponse>;
+  markActivityRead: (input: { token: string; ids: string[] }) => Promise<void>;
+  fetchNotificationKeywords: <TResponse = NotificationKeywordsResponse>(token: string) => Promise<TResponse>;
+  createNotificationKeyword: <TResponse = NotificationKeywordResponse>(input: { token: string; keyword: string }) => Promise<TResponse>;
+  deleteNotificationKeyword: (input: { token: string; keywordId: string }) => Promise<void>;
+  queryPresence: (input: { token: string; userIds: string[] }) => Promise<PresenceQueryResponse>;
   searchMessages: <TResponse>(input: { channelId: string; token: string; query: string }) => Promise<TResponse>;
   createPoll: <TResponse>(input: { channelId: string; token: string; body: unknown }) => Promise<TResponse>;
   votePoll: <TResponse>(input: { token: string; body: unknown }) => Promise<TResponse>;
@@ -341,6 +392,45 @@ export function createFlyntlyChatApi(config: FlyntlyChatApiConfig): FlyntlyChatA
         fallbackError: 'Failed to load mentions',
       });
     },
+    fetchActivity: (input) => {
+      const page = normalizeInboxPageRequest(input);
+      return requestJson(buildChatUrl('/activity', { query: inboxPageQuery(page) }), {
+        token: page.token,
+        fallbackError: 'Failed to load activity',
+      });
+    },
+    markActivityRead: ({ token, ids }) =>
+      requestVoid(buildChatUrl('/activity/read'), {
+        method: 'POST',
+        token,
+        body: { ids },
+        fallbackError: 'Failed to mark activity read',
+      }),
+    fetchNotificationKeywords: (token) =>
+      requestJson(buildChatUrl('/activity/keywords'), {
+        token,
+        fallbackError: 'Failed to load notification keywords',
+      }),
+    createNotificationKeyword: ({ token, keyword }) =>
+      requestJson(buildChatUrl('/activity/keywords'), {
+        method: 'POST',
+        token,
+        body: { keyword },
+        fallbackError: 'Failed to save notification keyword',
+      }),
+    deleteNotificationKeyword: ({ token, keywordId }) =>
+      requestVoid(buildChatUrl(`/activity/keywords/${keywordId}`), {
+        method: 'DELETE',
+        token,
+        fallbackError: 'Failed to delete notification keyword',
+      }),
+    queryPresence: ({ token, userIds }) =>
+      requestJson(buildChatUrl('/presence/query'), {
+        method: 'POST',
+        token,
+        body: { userIds },
+        fallbackError: 'Failed to load presence',
+      }),
     searchMessages: ({ channelId, token, query }) =>
       requestJson(buildChatUrl(`/channels/${channelId}/messages/search`, { query: { q: query } }), {
         token,

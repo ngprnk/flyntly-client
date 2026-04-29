@@ -1,4 +1,4 @@
-import { requestJson } from './http.js';
+import { requestJson, requestVoid } from './http.js';
 import type { WorkspaceUserStatus } from './org-api.js';
 import { createUrlBuilder } from './url.js';
 
@@ -27,8 +27,42 @@ export interface UserProfileResponse {
   user: UserProfileRecord;
 }
 
+export type PushTokenEnvironment = 'development' | 'production';
+
+export interface RegisterPushDeviceInput {
+  token: string;
+  tokenEnvironment: PushTokenEnvironment;
+  installationId: string;
+  tokenType?: 'apns';
+  platform?: 'ios';
+  appVersion?: string | null;
+  deviceName?: string | null;
+  authToken: string;
+}
+
+export interface UnregisterPushDeviceInput {
+  tokenEnvironment: PushTokenEnvironment;
+  installationId?: string;
+  token?: string;
+  tokenType?: 'apns';
+  platform?: 'ios';
+  authToken: string;
+}
+
+export interface RegisterPushDeviceResponse {
+  device: {
+    id: string;
+    platform: 'ios';
+    tokenType: 'apns';
+    tokenEnvironment: PushTokenEnvironment;
+    installationId: string;
+  };
+}
+
 export interface FlyntlyUserApi {
   fetchUserProfile: (input: { userId: string; token: string }) => Promise<UserProfileResponse>;
+  registerPushDevice: (input: RegisterPushDeviceInput) => Promise<RegisterPushDeviceResponse>;
+  unregisterPushDevice: (input: UnregisterPushDeviceInput) => Promise<void>;
 }
 
 export function createFlyntlyUserApi(config: FlyntlyUserApiConfig): FlyntlyUserApi {
@@ -39,6 +73,50 @@ export function createFlyntlyUserApi(config: FlyntlyUserApiConfig): FlyntlyUserA
       requestJson<UserProfileResponse>(buildUrl(`/users/${userId}`), {
         token,
         fallbackError: 'Failed to load user profile',
+      }),
+    registerPushDevice: ({
+      authToken,
+      token,
+      tokenEnvironment,
+      installationId,
+      tokenType = 'apns',
+      platform = 'ios',
+      appVersion,
+      deviceName,
+    }) =>
+      requestJson<RegisterPushDeviceResponse>(buildUrl('/devices/push-token'), {
+        method: 'POST',
+        token: authToken,
+        body: {
+          token,
+          tokenEnvironment,
+          installationId,
+          tokenType,
+          platform,
+          appVersion,
+          deviceName,
+        },
+        fallbackError: 'Failed to register push notifications',
+      }),
+    unregisterPushDevice: ({
+      authToken,
+      tokenEnvironment,
+      installationId,
+      token,
+      tokenType = 'apns',
+      platform = 'ios',
+    }) =>
+      requestVoid(buildUrl('/devices/push-token'), {
+        method: 'DELETE',
+        token: authToken,
+        body: {
+          tokenEnvironment,
+          installationId,
+          token,
+          tokenType,
+          platform,
+        },
+        fallbackError: 'Failed to unregister push notifications',
       }),
   };
 }
