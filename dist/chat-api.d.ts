@@ -41,6 +41,8 @@ export interface ChannelBootstrapResponse {
 }
 export interface ChannelPaginationResponse {
     messages: unknown[];
+    latestSeq?: number | null;
+    hasMore?: boolean;
 }
 export interface PinRecord {
     id: string;
@@ -186,6 +188,12 @@ export interface FlyntlyChatApi {
         channelId: string;
         token: string;
         beforeTimestamp: string;
+        limit?: number;
+    }) => Promise<ChannelPaginationResponse>;
+    fetchChannelMessagesAfterSeq: (input: {
+        channelId: string;
+        token: string;
+        afterSeq: number;
         limit?: number;
     }) => Promise<ChannelPaginationResponse>;
     listChannels: <TResponse>(token: string) => Promise<TResponse>;

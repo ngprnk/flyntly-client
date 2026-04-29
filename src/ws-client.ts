@@ -8,8 +8,21 @@ import type {
   PresenceUserPayload,
   RawReactionPayload,
   RawThreadPayload,
+  WebSocketConnectionState,
   WSMessageQueueItem,
 } from './ws-types.js';
+
+export type MarkReadInput =
+  | number
+  | {
+      timestamp?: number;
+      lastReadSeq?: number;
+    };
+
+type PendingReadReceipt = {
+  timestamp: number;
+  lastReadSeq?: number;
+};
 
 export interface FlyntlyWebSocketManagerOptions {
   url: string;
@@ -20,6 +33,7 @@ export interface FlyntlyWebSocketManagerOptions {
   }) => void;
   WebSocketImpl?: typeof WebSocket;
   logger?: Pick<Console, 'info' | 'warn' | 'error'>;
+  onConnectionStateChange?: (state: WebSocketConnectionState) => void;
 }
 
 function getDefaultTimezone(): string {
@@ -30,10 +44,54 @@ function isSocketOpen(ws: WebSocket | null): ws is WebSocket {
   return ws !== null && ws.readyState === WebSocket.OPEN;
 }
 
+function isSocketConnecting(ws: WebSocket | null): ws is WebSocket {
+  return ws !== null && ws.readyState === WebSocket.CONNECTING;
+}
+
+function normalizeReadReceipt(input?: MarkReadInput): PendingReadReceipt {
+  if (typeof input === 'number') {
+    return { timestamp: input };
+  }
+
+  return {
+    timestamp: input?.timestamp ?? Date.now(),
+    lastReadSeq: input?.lastReadSeq,
+  };
+}
+
+function shouldReplaceReadReceipt(current: PendingReadReceipt | undefined, next: PendingReadReceipt): boolean {
+  if (!current) {
+    return true;
+  }
+
+  if (typeof current.lastReadSeq === 'number' && typeof next.lastReadSeq === 'number') {
+    return next.lastReadSeq >= current.lastReadSeq;
+  }
+
+  if (typeof next.lastReadSeq === 'number') {
+    return true;
+  }
+
+  if (typeof current.lastReadSeq === 'number') {
+    return false;
+  }
+
+  return next.timestamp >= current.timestamp;
+}
+
+function createMarkReadPayload(channelId: string, receipt: PendingReadReceipt): object {
+  return {
+    type: 'mark-read',
+    channelId,
+    timestamp: receipt.timestamp,
+    ...(typeof receipt.lastReadSeq === 'number' ? { lastReadSeq: receipt.lastReadSeq } : {}),
+  };
+}
+
 export class FlyntlyWebSocketManager {
   private ws: WebSocket | null = null;
   private readonly subscribedChannels = new Set<string>();
-  private readonly pendingReadReceipts = new Map<string, number>();
+  private readonly pendingReadReceipts = new Map<string, PendingReadReceipt>();
   private token: string | null = null;
   private isAuthenticated = false;
   private authTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -46,7 +104,13 @@ export class FlyntlyWebSocketManager {
   private readonly onServerMessage?: FlyntlyWebSocketManagerOptions['onServerMessage'];
   private readonly WebSocketImpl: typeof WebSocket;
   private readonly logger: Pick<Console, 'info' | 'warn' | 'error'>;
+  private readonly onConnectionStateChange?: FlyntlyWebSocketManagerOptions['onConnectionStateChange'];
   private presenceState: Extract<PresenceState, 'online' | 'away'> = 'online';
+  private connectionState: WebSocketConnectionState = 'idle';
+  private connectionGeneration = 0;
+  private reconnectAttempt = 0;
+  private manuallyDisconnected = false;
+  private lastNetworkReconnectAt = 0;
   public onReconnect: (() => void) | null = null;
 
   constructor(options: FlyntlyWebSocketManagerOptions) {
@@ -55,7 +119,9 @@ export class FlyntlyWebSocketManager {
     this.onServerMessage = options.onServerMessage;
     this.WebSocketImpl = options.WebSocketImpl ?? WebSocket;
     this.logger = options.logger ?? console;
+    this.onConnectionStateChange = options.onConnectionStateChange;
     this.installVisibilityPresenceListener();
+    this.installBrowserNetworkListeners();
   }
 
   private log(level: 'info' | 'warn' | 'error', message: string, extra?: Record<string, unknown>): void {
@@ -73,22 +139,26 @@ export class FlyntlyWebSocketManager {
   }
 
   connect(token: string): void {
-    if (isSocketOpen(this.ws) && this.token === token) {
+    if ((isSocketOpen(this.ws) || isSocketConnecting(this.ws)) && this.token === token) {
       return;
     }
 
     this.token = token;
+    this.manuallyDisconnected = false;
     this.isAuthenticated = false;
+    this.connectionGeneration += 1;
+    const generation = this.connectionGeneration;
 
     if (this.ws) {
       this.ws.close(1000, 'Reconnecting');
     }
 
+    this.setConnectionState(this.reconnectAttempt > 0 ? 'reconnecting' : 'connecting');
     this.log('info', 'Connecting');
     this.ws = new this.WebSocketImpl(this.url);
-    this.ws.onopen = () => this.handleOpen();
-    this.ws.onmessage = (event) => this.handleMessage(event as MessageEvent<string>);
-    this.ws.onclose = (event) => this.handleClose(event);
+    this.ws.onopen = () => this.handleOpen(generation);
+    this.ws.onmessage = (event) => this.handleMessage(generation, event as MessageEvent<string>);
+    this.ws.onclose = (event) => this.handleClose(generation, event);
     this.ws.onerror = (error) => {
       this.log('error', 'Socket error event fired', {
         errorType: error.type,
@@ -96,7 +166,11 @@ export class FlyntlyWebSocketManager {
     };
   }
 
-  private handleOpen(): void {
+  private handleOpen(generation: number): void {
+    if (generation !== this.connectionGeneration) {
+      return;
+    }
+
     this.log('info', 'Socket open');
 
     if (this.authTimeout) {
@@ -117,7 +191,11 @@ export class FlyntlyWebSocketManager {
     }
   }
 
-  private handleMessage(event: MessageEvent<string>): void {
+  private handleMessage(generation: number, event: MessageEvent<string>): void {
+    if (generation !== this.connectionGeneration) {
+      return;
+    }
+
     if (typeof event.data !== 'string') {
       this.log('warn', 'Ignoring non-text message');
       return;
@@ -141,7 +219,11 @@ export class FlyntlyWebSocketManager {
     });
   }
 
-  private handleClose(event: CloseEvent): void {
+  private handleClose(generation: number, event: CloseEvent): void {
+    if (generation !== this.connectionGeneration) {
+      return;
+    }
+
     this.isAuthenticated = false;
     this.stopPresenceHeartbeat();
 
@@ -160,7 +242,8 @@ export class FlyntlyWebSocketManager {
       },
     );
 
-    if (!this.token) {
+    if (!this.token || this.manuallyDisconnected) {
+      this.setConnectionState('closed');
       return;
     }
 
@@ -170,19 +253,11 @@ export class FlyntlyWebSocketManager {
       event.code === 4001 ||
       event.reason === 'Session invalidated'
     ) {
+      this.setConnectionState('closed');
       return;
     }
 
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-    }
-
-    this.log('warn', 'Scheduling reconnect', { delayMs: 3000 });
-    this.reconnectTimeout = setTimeout(() => {
-      if (this.token) {
-        this.connect(this.token);
-      }
-    }, 3000);
+    this.scheduleReconnect('socket-close');
   }
 
   private sendJson(payload: object): void {
@@ -193,8 +268,80 @@ export class FlyntlyWebSocketManager {
     this.ws.send(JSON.stringify(payload));
   }
 
+  private setConnectionState(state: WebSocketConnectionState): void {
+    if (this.connectionState === state) {
+      return;
+    }
+
+    this.connectionState = state;
+    this.onConnectionStateChange?.(state);
+  }
+
+  private scheduleReconnect(reason: string): void {
+    if (!this.token || this.manuallyDisconnected) {
+      return;
+    }
+
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      this.setConnectionState('offline');
+      this.log('warn', 'Deferring reconnect while browser is offline', { reason });
+      return;
+    }
+
+    this.reconnectAttempt += 1;
+    const exponentialDelay = Math.min(15_000, 1_000 * 2 ** Math.min(this.reconnectAttempt - 1, 4));
+    const jitterMs = Math.floor(Math.random() * 500);
+    const delayMs = exponentialDelay + jitterMs;
+
+    this.setConnectionState('reconnecting');
+    this.log('warn', 'Scheduling reconnect', { delayMs, reason, attempt: this.reconnectAttempt });
+    this.reconnectTimeout = setTimeout(() => {
+      this.reconnectTimeout = null;
+      if (this.token && !this.manuallyDisconnected) {
+        this.connect(this.token);
+      }
+    }, delayMs);
+  }
+
+  reconnectNow(reason = 'manual'): void {
+    if (!this.token || this.manuallyDisconnected) {
+      return;
+    }
+
+    const now = Date.now();
+    if (reason !== 'manual' && now - this.lastNetworkReconnectAt < 750) {
+      return;
+    }
+    this.lastNetworkReconnectAt = now;
+
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+
+    this.reconnectAttempt = 0;
+    this.connectionGeneration += 1;
+    this.isAuthenticated = false;
+    this.stopPresenceHeartbeat();
+
+    if (this.ws) {
+      this.ws.close(1000, `Reconnect: ${reason}`);
+      this.ws = null;
+    }
+
+    this.setConnectionState('connecting');
+    this.connect(this.token);
+  }
+
   private handleAuthenticated(): void {
     this.isAuthenticated = true;
+    this.reconnectAttempt = 0;
+    this.setConnectionState('authenticated');
 
     if (this.authTimeout) {
       clearTimeout(this.authTimeout);
@@ -209,12 +356,8 @@ export class FlyntlyWebSocketManager {
       this.joinChannel(channelId);
     }
 
-    for (const [channelId, timestamp] of this.pendingReadReceipts) {
-      this.sendJson({
-        type: 'mark-read',
-        channelId,
-        timestamp,
-      });
+    for (const [channelId, receipt] of this.pendingReadReceipts) {
+      this.sendJson(createMarkReadPayload(channelId, receipt));
     }
     this.pendingReadReceipts.clear();
 
@@ -259,19 +402,17 @@ export class FlyntlyWebSocketManager {
     this.messageQueue.push({ channelId, update });
   }
 
-  markChannelAsRead(channelId: string, timestamp?: number): void {
-    const resolvedTimestamp = timestamp || Date.now();
+  markChannelAsRead(channelId: string, input?: MarkReadInput): void {
+    const receipt = normalizeReadReceipt(input);
 
     if (!isSocketOpen(this.ws) || !this.isAuthenticated) {
-      this.pendingReadReceipts.set(channelId, resolvedTimestamp);
+      if (shouldReplaceReadReceipt(this.pendingReadReceipts.get(channelId), receipt)) {
+        this.pendingReadReceipts.set(channelId, receipt);
+      }
       return;
     }
 
-    this.sendJson({
-      type: 'mark-read',
-      channelId,
-      timestamp: resolvedTimestamp,
-    });
+    this.sendJson(createMarkReadPayload(channelId, receipt));
   }
 
   setPresenceState(state: PresenceState): void {
@@ -326,7 +467,24 @@ export class FlyntlyWebSocketManager {
     });
   }
 
+  private installBrowserNetworkListeners(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.addEventListener('online', () => {
+      this.reconnectNow('browser-online');
+    });
+
+    window.addEventListener('offline', () => {
+      this.setConnectionState('offline');
+    });
+  }
+
   disconnect(): void {
+    this.manuallyDisconnected = true;
+    this.connectionGeneration += 1;
+
     if (this.authTimeout) {
       clearTimeout(this.authTimeout);
       this.authTimeout = null;
@@ -339,6 +497,7 @@ export class FlyntlyWebSocketManager {
 
     this.token = null;
     this.isAuthenticated = false;
+    this.reconnectAttempt = 0;
     this.stopPresenceHeartbeat();
     this.subscribedChannels.clear();
     this.pendingReadReceipts.clear();
@@ -348,6 +507,7 @@ export class FlyntlyWebSocketManager {
       this.ws.close(1000, 'Client disconnect');
       this.ws = null;
     }
+    this.setConnectionState('closed');
   }
 
   onUpdate(callback: (channelId: string) => void): () => void {

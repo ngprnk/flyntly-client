@@ -48,6 +48,8 @@ export interface ChannelBootstrapResponse {
 
 export interface ChannelPaginationResponse {
   messages: unknown[];
+  latestSeq?: number | null;
+  hasMore?: boolean;
 }
 
 export interface PinRecord {
@@ -207,6 +209,7 @@ export interface FlyntlyChatApi {
   buildChatUrl: (...args: BuildUrlArg[]) => string;
   fetchChannelBootstrap: (input: { channelId: string; token: string }) => Promise<ChannelBootstrapResponse>;
   fetchOlderChannelMessages: (input: { channelId: string; token: string; beforeTimestamp: string; limit?: number }) => Promise<ChannelPaginationResponse>;
+  fetchChannelMessagesAfterSeq: (input: { channelId: string; token: string; afterSeq: number; limit?: number }) => Promise<ChannelPaginationResponse>;
   listChannels: <TResponse>(token: string) => Promise<TResponse>;
   createChannel: <TResponse>(input: { token: string; body: unknown }) => Promise<TResponse>;
   inviteChannelMember: <TResponse>(input: { channelId: string; token: string; body: unknown }) => Promise<TResponse>;
@@ -260,6 +263,13 @@ export function createFlyntlyChatApi(config: FlyntlyChatApiConfig): FlyntlyChatA
       }), {
         token,
         fallbackError: 'Failed to load older messages',
+      }),
+    fetchChannelMessagesAfterSeq: ({ channelId, token, afterSeq, limit = 100 }) =>
+      requestJson(buildChatUrl(`/channels/${channelId}/messages/paginated`, {
+        query: { afterSeq, limit },
+      }), {
+        token,
+        fallbackError: 'Failed to catch up channel messages',
       }),
     listChannels: (token) => requestJson(buildChatUrl('/channels'), { token }),
     createChannel: ({ token, body }) => requestJson(buildChatUrl('/channels'), {

@@ -9,6 +9,8 @@ export interface RawMessagePayload {
   user_id: string;
   text: string;
   timestamp: number | string;
+  message_seq?: number | string | null;
+  messageSeq?: number | string | null;
   attachments?: unknown[];
   reactions_agg?: unknown[] | string;
   attachments_agg?: unknown[] | string;
@@ -82,6 +84,14 @@ export interface WSMessageQueueItem {
   update: string;
 }
 
+export type WebSocketConnectionState =
+  | 'idle'
+  | 'connecting'
+  | 'authenticated'
+  | 'reconnecting'
+  | 'offline'
+  | 'closed';
+
 export interface WSEventCallbacks {
   update: (channelId: string) => void;
   unread: (channelId: string, count: number) => void;
@@ -109,7 +119,7 @@ export interface WSEventCallbacks {
 export type ServerMessage =
   | { type: 'authenticated' }
   | { type: 'unread-count-update'; channelId: string; unreadCount: number }
-  | { type: 'mark-read-ack'; channelId: string; unreadCount: number }
+  | { type: 'mark-read-ack'; channelId: string; unreadCount: number; lastReadSeq?: number; timestamp?: number }
   | { type: 'channel-deleted'; channelId: string }
   | {
       type: 'workspace-access-revoked';

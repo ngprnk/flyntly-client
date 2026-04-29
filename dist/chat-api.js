@@ -14,6 +14,12 @@ export function createFlyntlyChatApi(config) {
             token,
             fallbackError: 'Failed to load older messages',
         }),
+        fetchChannelMessagesAfterSeq: ({ channelId, token, afterSeq, limit = 100 }) => requestJson(buildChatUrl(`/channels/${channelId}/messages/paginated`, {
+            query: { afterSeq, limit },
+        }), {
+            token,
+            fallbackError: 'Failed to catch up channel messages',
+        }),
         listChannels: (token) => requestJson(buildChatUrl('/channels'), { token }),
         createChannel: ({ token, body }) => requestJson(buildChatUrl('/channels'), {
             method: 'POST',

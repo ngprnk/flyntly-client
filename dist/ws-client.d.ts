@@ -1,5 +1,9 @@
 import { WSCallbackRegistry } from './ws-callback-registry.js';
-import type { RawMessageEditPayload, RawMessagePayload, RawAttachmentTranscodeUpdatePayload, RawPinPayload, PresenceState, PresenceUserPayload, RawReactionPayload, RawThreadPayload } from './ws-types.js';
+import type { RawMessageEditPayload, RawMessagePayload, RawAttachmentTranscodeUpdatePayload, RawPinPayload, PresenceState, PresenceUserPayload, RawReactionPayload, RawThreadPayload, WebSocketConnectionState } from './ws-types.js';
+export type MarkReadInput = number | {
+    timestamp?: number;
+    lastReadSeq?: number;
+};
 export interface FlyntlyWebSocketManagerOptions {
     url: string;
     getTimezone?: () => string;
@@ -9,6 +13,7 @@ export interface FlyntlyWebSocketManagerOptions {
     }) => void;
     WebSocketImpl?: typeof WebSocket;
     logger?: Pick<Console, 'info' | 'warn' | 'error'>;
+    onConnectionStateChange?: (state: WebSocketConnectionState) => void;
 }
 export declare class FlyntlyWebSocketManager {
     private ws;
@@ -26,7 +31,13 @@ export declare class FlyntlyWebSocketManager {
     private readonly onServerMessage?;
     private readonly WebSocketImpl;
     private readonly logger;
+    private readonly onConnectionStateChange?;
     private presenceState;
+    private connectionState;
+    private connectionGeneration;
+    private reconnectAttempt;
+    private manuallyDisconnected;
+    private lastNetworkReconnectAt;
     onReconnect: (() => void) | null;
     constructor(options: FlyntlyWebSocketManagerOptions);
     private log;
@@ -35,16 +46,20 @@ export declare class FlyntlyWebSocketManager {
     private handleMessage;
     private handleClose;
     private sendJson;
+    private setConnectionState;
+    private scheduleReconnect;
+    reconnectNow(reason?: string): void;
     private handleAuthenticated;
     joinChannel(channelId: string): void;
     leaveChannel(channelId: string): void;
     sendMutation(channelId: string, update: string): void;
-    markChannelAsRead(channelId: string, timestamp?: number): void;
+    markChannelAsRead(channelId: string, input?: MarkReadInput): void;
     setPresenceState(state: PresenceState): void;
     private sendPresenceHeartbeat;
     private schedulePresenceHeartbeat;
     private stopPresenceHeartbeat;
     private installVisibilityPresenceListener;
+    private installBrowserNetworkListeners;
     disconnect(): void;
     onUpdate(callback: (channelId: string) => void): () => void;
     onUnreadUpdate(callback: (channelId: string, count: number) => void): () => void;
