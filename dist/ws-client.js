@@ -354,7 +354,8 @@ export class FlyntlyWebSocketManager {
         });
     }
     installBrowserNetworkListeners() {
-        if (typeof window === 'undefined') {
+        if (typeof window === 'undefined' ||
+            typeof window.addEventListener !== 'function') {
             return;
         }
         window.addEventListener('online', () => {

@@ -468,7 +468,10 @@ export class FlyntlyWebSocketManager {
   }
 
   private installBrowserNetworkListeners(): void {
-    if (typeof window === 'undefined') {
+    if (
+      typeof window === 'undefined' ||
+      typeof window.addEventListener !== 'function'
+    ) {
       return;
     }
 
