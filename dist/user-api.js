@@ -7,6 +7,12 @@ export function createFlyntlyUserApi(config) {
             token,
             fallbackError: 'Failed to load user profile',
         }),
+        updateOwnProfile: ({ token, firstName, lastName }) => requestJson(buildUrl('/profile'), {
+            method: 'PUT',
+            token,
+            body: { firstName, lastName },
+            fallbackError: 'Failed to update profile',
+        }),
         registerPushDevice: ({ authToken, token, tokenEnvironment, installationId, tokenType = 'apns', platform = 'ios', appVersion, deviceName, }) => requestJson(buildUrl('/devices/push-token'), {
             method: 'POST',
             token: authToken,

@@ -18,6 +18,12 @@ export function createFlyntlyAuthApi(config) {
             body: { orgId },
             fallbackError: 'Failed to switch workspace',
         }),
+        changePassword: ({ token, currentPassword, newPassword }) => requestJson(buildUrl('/auth/change-password'), {
+            method: 'POST',
+            token,
+            body: { currentPassword, newPassword },
+            fallbackError: 'Failed to change password',
+        }),
         logout: (token) => requestVoid(buildUrl('/auth/logout'), {
             method: 'POST',
             token,

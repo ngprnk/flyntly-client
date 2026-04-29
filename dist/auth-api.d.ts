@@ -29,6 +29,10 @@ export interface SwitchOrganizationResponse {
     orgId: string;
     orgName: string;
 }
+export interface ChangePasswordResponse {
+    success: true;
+    message?: string;
+}
 export interface FlyntlyAuthApi {
     login: (input: {
         email: string;
@@ -41,6 +45,11 @@ export interface FlyntlyAuthApi {
         token: string;
         orgId: string;
     }) => Promise<SwitchOrganizationResponse>;
+    changePassword: (input: {
+        token: string;
+        currentPassword: string;
+        newPassword: string;
+    }) => Promise<ChangePasswordResponse>;
     logout: (token: string) => Promise<void>;
 }
 export declare function createFlyntlyAuthApi(config: FlyntlyAuthApiConfig): FlyntlyAuthApi;

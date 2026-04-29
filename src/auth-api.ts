@@ -37,6 +37,11 @@ export interface SwitchOrganizationResponse {
   orgName: string;
 }
 
+export interface ChangePasswordResponse {
+  success: true;
+  message?: string;
+}
+
 export interface FlyntlyAuthApi {
   login: (input: {
     email: string;
@@ -46,6 +51,11 @@ export interface FlyntlyAuthApi {
   }) => Promise<LoginResponse>;
   me: (token: string) => Promise<CurrentUserResponse>;
   switchOrg: (input: { token: string; orgId: string }) => Promise<SwitchOrganizationResponse>;
+  changePassword: (input: {
+    token: string;
+    currentPassword: string;
+    newPassword: string;
+  }) => Promise<ChangePasswordResponse>;
   logout: (token: string) => Promise<void>;
 }
 
@@ -70,6 +80,13 @@ export function createFlyntlyAuthApi(config: FlyntlyAuthApiConfig): FlyntlyAuthA
         token,
         body: { orgId },
         fallbackError: 'Failed to switch workspace',
+      }),
+    changePassword: ({ token, currentPassword, newPassword }) =>
+      requestJson<ChangePasswordResponse>(buildUrl('/auth/change-password'), {
+        method: 'POST',
+        token,
+        body: { currentPassword, newPassword },
+        fallbackError: 'Failed to change password',
       }),
     logout: (token) =>
       requestVoid(buildUrl('/auth/logout'), {

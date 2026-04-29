@@ -27,6 +27,24 @@ export interface UserProfileResponse {
   user: UserProfileRecord;
 }
 
+export interface UpdateOwnProfileInput {
+  token: string;
+  firstName: string;
+  lastName: string;
+}
+
+export interface UpdateOwnProfileResponse {
+  user: {
+    id: string;
+    email: string;
+    first_name?: string | null;
+    last_name?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+  };
+  message?: string;
+}
+
 export type PushTokenEnvironment = 'development' | 'production';
 
 export interface RegisterPushDeviceInput {
@@ -61,6 +79,7 @@ export interface RegisterPushDeviceResponse {
 
 export interface FlyntlyUserApi {
   fetchUserProfile: (input: { userId: string; token: string }) => Promise<UserProfileResponse>;
+  updateOwnProfile: (input: UpdateOwnProfileInput) => Promise<UpdateOwnProfileResponse>;
   registerPushDevice: (input: RegisterPushDeviceInput) => Promise<RegisterPushDeviceResponse>;
   unregisterPushDevice: (input: UnregisterPushDeviceInput) => Promise<void>;
 }
@@ -73,6 +92,13 @@ export function createFlyntlyUserApi(config: FlyntlyUserApiConfig): FlyntlyUserA
       requestJson<UserProfileResponse>(buildUrl(`/users/${userId}`), {
         token,
         fallbackError: 'Failed to load user profile',
+      }),
+    updateOwnProfile: ({ token, firstName, lastName }) =>
+      requestJson<UpdateOwnProfileResponse>(buildUrl('/profile'), {
+        method: 'PUT',
+        token,
+        body: { firstName, lastName },
+        fallbackError: 'Failed to update profile',
       }),
     registerPushDevice: ({
       authToken,

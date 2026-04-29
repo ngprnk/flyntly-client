@@ -21,6 +21,22 @@ export interface UserProfileRecord {
 export interface UserProfileResponse {
     user: UserProfileRecord;
 }
+export interface UpdateOwnProfileInput {
+    token: string;
+    firstName: string;
+    lastName: string;
+}
+export interface UpdateOwnProfileResponse {
+    user: {
+        id: string;
+        email: string;
+        first_name?: string | null;
+        last_name?: string | null;
+        firstName?: string | null;
+        lastName?: string | null;
+    };
+    message?: string;
+}
 export type PushTokenEnvironment = 'development' | 'production';
 export interface RegisterPushDeviceInput {
     token: string;
@@ -54,6 +70,7 @@ export interface FlyntlyUserApi {
         userId: string;
         token: string;
     }) => Promise<UserProfileResponse>;
+    updateOwnProfile: (input: UpdateOwnProfileInput) => Promise<UpdateOwnProfileResponse>;
     registerPushDevice: (input: RegisterPushDeviceInput) => Promise<RegisterPushDeviceResponse>;
     unregisterPushDevice: (input: UnregisterPushDeviceInput) => Promise<void>;
 }
