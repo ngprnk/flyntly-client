@@ -517,7 +517,7 @@ export class FlyntlyWebSocketManager {
     return this.callbacks.subscribe('update', callback);
   }
 
-  onUnreadUpdate(callback: (channelId: string, count: number) => void): () => void {
+  onUnreadUpdate(callback: (channelId: string, count: number, lastMessageSeq?: number) => void): () => void {
     return this.callbacks.subscribe('unread', callback);
   }
 

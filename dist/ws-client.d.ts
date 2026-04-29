@@ -62,7 +62,7 @@ export declare class FlyntlyWebSocketManager {
     private installBrowserNetworkListeners;
     disconnect(): void;
     onUpdate(callback: (channelId: string) => void): () => void;
-    onUnreadUpdate(callback: (channelId: string, count: number) => void): () => void;
+    onUnreadUpdate(callback: (channelId: string, count: number, lastMessageSeq?: number) => void): () => void;
     onChannelDeleted(callback: (channelId: string) => void): () => void;
     onWorkspaceAccessRevoked(callback: (orgId: string, replacementToken: string, replacementOrgId: string | null) => void): () => void;
     onMessage(callback: (channelId: string, message: RawMessagePayload) => void): () => void;

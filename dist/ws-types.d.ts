@@ -77,7 +77,7 @@ export interface WSMessageQueueItem {
 export type WebSocketConnectionState = 'idle' | 'connecting' | 'authenticated' | 'reconnecting' | 'offline' | 'closed';
 export interface WSEventCallbacks {
     update: (channelId: string) => void;
-    unread: (channelId: string, count: number) => void;
+    unread: (channelId: string, count: number, lastMessageSeq?: number) => void;
     channelDeleted: (channelId: string) => void;
     workspaceAccessRevoked: (orgId: string, replacementToken: string, replacementOrgId: string | null) => void;
     message: (channelId: string, message: RawMessagePayload) => void;
@@ -98,6 +98,14 @@ export type ServerMessage = {
     type: 'unread-count-update';
     channelId: string;
     unreadCount: number;
+    lastMessageSeq?: number;
+} | {
+    type: 'unread-count-batch';
+    updates: Array<{
+        channelId: string;
+        unreadCount: number;
+        lastMessageSeq?: number;
+    }>;
 } | {
     type: 'mark-read-ack';
     channelId: string;
