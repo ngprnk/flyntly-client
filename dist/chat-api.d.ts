@@ -172,6 +172,38 @@ export interface NotificationKeywordResponse {
 export interface PresenceQueryResponse {
     users: PresenceUserPayload[];
 }
+export type CallKind = 'audio' | 'video';
+export type CallStatus = 'ringing' | 'live' | 'ended' | 'cancelled' | 'missed';
+export type CallParticipantStatus = 'invited' | 'ringing' | 'joined' | 'left' | 'declined' | 'missed';
+export interface CallParticipantRecord {
+    userId: string;
+    status: CallParticipantStatus;
+    joinedAt?: number | null;
+    leftAt?: number | null;
+    declinedAt?: number | null;
+}
+export interface CallRecord {
+    id: string;
+    channelId: string;
+    createdBy: string;
+    kind: CallKind;
+    status: CallStatus;
+    startedAt: number;
+    ringExpiresAt: number;
+    endedAt?: number | null;
+    participants: CallParticipantRecord[];
+}
+export interface ActiveCallResponse {
+    call: CallRecord | null;
+}
+export interface CallResponse {
+    call: CallRecord;
+}
+export interface JoinCallResponse {
+    call: CallRecord;
+    participantId: string;
+    authToken: string;
+}
 export interface InboxPageRequest {
     token: string;
     limit?: number;
@@ -338,6 +370,35 @@ export interface FlyntlyChatApi {
         token: string;
         body: unknown;
     }) => Promise<TResponse>;
+    createCall: (input: {
+        channelId: string;
+        token: string;
+        kind: CallKind;
+    }) => Promise<JoinCallResponse>;
+    getActiveChannelCall: (input: {
+        channelId: string;
+        token: string;
+    }) => Promise<ActiveCallResponse>;
+    getCall: (input: {
+        callId: string;
+        token: string;
+    }) => Promise<CallResponse>;
+    joinCall: (input: {
+        callId: string;
+        token: string;
+    }) => Promise<JoinCallResponse>;
+    declineCall: (input: {
+        callId: string;
+        token: string;
+    }) => Promise<CallResponse>;
+    leaveCall: (input: {
+        callId: string;
+        token: string;
+    }) => Promise<CallResponse>;
+    endCall: (input: {
+        callId: string;
+        token: string;
+    }) => Promise<CallResponse>;
 }
 export declare function createFlyntlyChatApi(config: FlyntlyChatApiConfig): FlyntlyChatApi;
 //# sourceMappingURL=chat-api.d.ts.map

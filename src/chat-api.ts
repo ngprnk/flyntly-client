@@ -198,6 +198,44 @@ export interface PresenceQueryResponse {
   users: PresenceUserPayload[];
 }
 
+export type CallKind = 'audio' | 'video';
+export type CallStatus = 'ringing' | 'live' | 'ended' | 'cancelled' | 'missed';
+export type CallParticipantStatus = 'invited' | 'ringing' | 'joined' | 'left' | 'declined' | 'missed';
+
+export interface CallParticipantRecord {
+  userId: string;
+  status: CallParticipantStatus;
+  joinedAt?: number | null;
+  leftAt?: number | null;
+  declinedAt?: number | null;
+}
+
+export interface CallRecord {
+  id: string;
+  channelId: string;
+  createdBy: string;
+  kind: CallKind;
+  status: CallStatus;
+  startedAt: number;
+  ringExpiresAt: number;
+  endedAt?: number | null;
+  participants: CallParticipantRecord[];
+}
+
+export interface ActiveCallResponse {
+  call: CallRecord | null;
+}
+
+export interface CallResponse {
+  call: CallRecord;
+}
+
+export interface JoinCallResponse {
+  call: CallRecord;
+  participantId: string;
+  authToken: string;
+}
+
 export interface InboxPageRequest {
   token: string;
   limit?: number;
@@ -245,6 +283,13 @@ export interface FlyntlyChatApi {
   searchMessages: <TResponse>(input: { channelId: string; token: string; query: string }) => Promise<TResponse>;
   createPoll: <TResponse>(input: { channelId: string; token: string; body: unknown }) => Promise<TResponse>;
   votePoll: <TResponse>(input: { token: string; body: unknown }) => Promise<TResponse>;
+  createCall: (input: { channelId: string; token: string; kind: CallKind }) => Promise<JoinCallResponse>;
+  getActiveChannelCall: (input: { channelId: string; token: string }) => Promise<ActiveCallResponse>;
+  getCall: (input: { callId: string; token: string }) => Promise<CallResponse>;
+  joinCall: (input: { callId: string; token: string }) => Promise<JoinCallResponse>;
+  declineCall: (input: { callId: string; token: string }) => Promise<CallResponse>;
+  leaveCall: (input: { callId: string; token: string }) => Promise<CallResponse>;
+  endCall: (input: { callId: string; token: string }) => Promise<CallResponse>;
 }
 
 export function createFlyntlyChatApi(config: FlyntlyChatApiConfig): FlyntlyChatApi {
@@ -458,6 +503,47 @@ export function createFlyntlyChatApi(config: FlyntlyChatApiConfig): FlyntlyChatA
       body,
       fallbackError: 'Failed to vote in poll',
     }),
+    createCall: ({ channelId, token, kind }) =>
+      requestJson(buildChatUrl(`/channels/${channelId}/calls`), {
+        method: 'POST',
+        token,
+        body: { kind },
+        fallbackError: 'Failed to start call',
+      }),
+    getActiveChannelCall: ({ channelId, token }) =>
+      requestJson(buildChatUrl(`/channels/${channelId}/calls/active`), {
+        token,
+        fallbackError: 'Failed to load active call',
+      }),
+    getCall: ({ callId, token }) =>
+      requestJson(buildChatUrl(`/calls/${callId}`), {
+        token,
+        fallbackError: 'Failed to load call',
+      }),
+    joinCall: ({ callId, token }) =>
+      requestJson(buildChatUrl(`/calls/${callId}/join`), {
+        method: 'POST',
+        token,
+        fallbackError: 'Failed to join call',
+      }),
+    declineCall: ({ callId, token }) =>
+      requestJson(buildChatUrl(`/calls/${callId}/decline`), {
+        method: 'POST',
+        token,
+        fallbackError: 'Failed to decline call',
+      }),
+    leaveCall: ({ callId, token }) =>
+      requestJson(buildChatUrl(`/calls/${callId}/leave`), {
+        method: 'POST',
+        token,
+        fallbackError: 'Failed to leave call',
+      }),
+    endCall: ({ callId, token }) =>
+      requestJson(buildChatUrl(`/calls/${callId}/end`), {
+        method: 'POST',
+        token,
+        fallbackError: 'Failed to end call',
+      }),
   };
 }
 

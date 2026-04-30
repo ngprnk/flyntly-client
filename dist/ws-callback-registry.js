@@ -15,6 +15,14 @@ export class WSCallbackRegistry {
         messageUnpinned: new Set(),
         presenceBatch: new Set(),
         attachmentTranscodeUpdated: new Set(),
+        callStarted: new Set(),
+        callUpdated: new Set(),
+        callJoined: new Set(),
+        callLeft: new Set(),
+        callDeclined: new Set(),
+        callMissed: new Set(),
+        callEnded: new Set(),
+        callRingingStopped: new Set(),
     };
     subscribe(event, callback) {
         this.callbacks[event].add(callback);

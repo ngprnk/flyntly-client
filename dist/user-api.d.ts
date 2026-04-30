@@ -38,11 +38,12 @@ export interface UpdateOwnProfileResponse {
     message?: string;
 }
 export type PushTokenEnvironment = 'development' | 'production';
+export type PushTokenType = 'apns' | 'apns_voip';
 export interface RegisterPushDeviceInput {
     token: string;
     tokenEnvironment: PushTokenEnvironment;
     installationId: string;
-    tokenType?: 'apns';
+    tokenType?: PushTokenType;
     platform?: 'ios';
     appVersion?: string | null;
     deviceName?: string | null;
@@ -52,7 +53,7 @@ export interface UnregisterPushDeviceInput {
     tokenEnvironment: PushTokenEnvironment;
     installationId?: string;
     token?: string;
-    tokenType?: 'apns';
+    tokenType?: PushTokenType;
     platform?: 'ios';
     authToken: string;
 }
@@ -60,7 +61,7 @@ export interface RegisterPushDeviceResponse {
     device: {
         id: string;
         platform: 'ios';
-        tokenType: 'apns';
+        tokenType: PushTokenType;
         tokenEnvironment: PushTokenEnvironment;
         installationId: string;
     };

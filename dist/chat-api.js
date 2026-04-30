@@ -196,6 +196,40 @@ export function createFlyntlyChatApi(config) {
             body,
             fallbackError: 'Failed to vote in poll',
         }),
+        createCall: ({ channelId, token, kind }) => requestJson(buildChatUrl(`/channels/${channelId}/calls`), {
+            method: 'POST',
+            token,
+            body: { kind },
+            fallbackError: 'Failed to start call',
+        }),
+        getActiveChannelCall: ({ channelId, token }) => requestJson(buildChatUrl(`/channels/${channelId}/calls/active`), {
+            token,
+            fallbackError: 'Failed to load active call',
+        }),
+        getCall: ({ callId, token }) => requestJson(buildChatUrl(`/calls/${callId}`), {
+            token,
+            fallbackError: 'Failed to load call',
+        }),
+        joinCall: ({ callId, token }) => requestJson(buildChatUrl(`/calls/${callId}/join`), {
+            method: 'POST',
+            token,
+            fallbackError: 'Failed to join call',
+        }),
+        declineCall: ({ callId, token }) => requestJson(buildChatUrl(`/calls/${callId}/decline`), {
+            method: 'POST',
+            token,
+            fallbackError: 'Failed to decline call',
+        }),
+        leaveCall: ({ callId, token }) => requestJson(buildChatUrl(`/calls/${callId}/leave`), {
+            method: 'POST',
+            token,
+            fallbackError: 'Failed to leave call',
+        }),
+        endCall: ({ callId, token }) => requestJson(buildChatUrl(`/calls/${callId}/end`), {
+            method: 'POST',
+            token,
+            fallbackError: 'Failed to end call',
+        }),
     };
 }
 function normalizeInboxPageRequest(input) {

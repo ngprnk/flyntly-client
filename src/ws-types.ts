@@ -79,6 +79,28 @@ export interface PresenceUserPayload {
   lastSeen?: number | null;
 }
 
+export interface RawCallParticipantPayload {
+  userId: string;
+  status: 'invited' | 'ringing' | 'joined' | 'left' | 'declined' | 'missed';
+  joinedAt?: number | null;
+  leftAt?: number | null;
+  declinedAt?: number | null;
+}
+
+export interface RawCallPayload {
+  id: string;
+  channelId: string;
+  createdBy: string;
+  kind: 'audio' | 'video';
+  status: 'ringing' | 'live' | 'ended' | 'cancelled' | 'missed';
+  startedAt: number;
+  ringExpiresAt: number;
+  endedAt?: number | null;
+  participants: RawCallParticipantPayload[];
+}
+
+export type RawCallRingingStoppedReason = 'answered' | 'declined' | 'ended' | 'missed' | string;
+
 export interface WSMessageQueueItem {
   channelId: string;
   update: string;
@@ -114,6 +136,14 @@ export interface WSEventCallbacks {
     threadReplyIds: string[],
     parentMessageIds: string[],
   ) => void;
+  callStarted: (channelId: string, call: RawCallPayload) => void;
+  callUpdated: (channelId: string, call: RawCallPayload) => void;
+  callJoined: (channelId: string, call: RawCallPayload) => void;
+  callLeft: (channelId: string, call: RawCallPayload) => void;
+  callDeclined: (channelId: string, call: RawCallPayload) => void;
+  callMissed: (channelId: string, call: RawCallPayload) => void;
+  callEnded: (channelId: string, call: RawCallPayload) => void;
+  callRingingStopped: (channelId: string, callId: string, reason: RawCallRingingStoppedReason) => void;
 }
 
 export type ServerMessage =
@@ -154,6 +184,19 @@ export type ServerMessage =
       messageIds?: string[];
       threadReplyIds?: string[];
       parentMessageIds?: string[];
+    }
+  | { type: 'call-started'; channelId: string; call: RawCallPayload }
+  | { type: 'call-updated'; channelId: string; call: RawCallPayload }
+  | { type: 'call-joined'; channelId: string; call: RawCallPayload }
+  | { type: 'call-left'; channelId: string; call: RawCallPayload }
+  | { type: 'call-declined'; channelId: string; call: RawCallPayload }
+  | { type: 'call-missed'; channelId: string; call: RawCallPayload }
+  | { type: 'call-ended'; channelId: string; call: RawCallPayload }
+  | {
+      type: 'call-ringing-stopped';
+      channelId: string;
+      callId: string;
+      reason: RawCallRingingStoppedReason;
     }
   | { type: 'joined'; channelId?: string }
   | { type: 'error'; error: string };

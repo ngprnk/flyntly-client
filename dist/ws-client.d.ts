@@ -1,5 +1,5 @@
 import { WSCallbackRegistry } from './ws-callback-registry.js';
-import type { RawMessageEditPayload, RawMessagePayload, RawAttachmentTranscodeUpdatePayload, RawPinPayload, PresenceState, PresenceUserPayload, RawReactionPayload, RawThreadPayload, WebSocketConnectionState } from './ws-types.js';
+import type { RawMessageEditPayload, RawMessagePayload, RawAttachmentTranscodeUpdatePayload, RawCallPayload, RawCallRingingStoppedReason, RawPinPayload, PresenceState, PresenceUserPayload, RawReactionPayload, RawThreadPayload, WebSocketConnectionState } from './ws-types.js';
 export type MarkReadInput = number | {
     timestamp?: number;
     lastReadSeq?: number;
@@ -76,6 +76,14 @@ export declare class FlyntlyWebSocketManager {
     onMessageUnpinned(callback: (channelId: string, messageId: string) => void): () => void;
     onPresenceBatch(callback: (users: PresenceUserPayload[]) => void): () => void;
     onAttachmentTranscodeUpdated(callback: (channelId: string, attachment: RawAttachmentTranscodeUpdatePayload, messageIds: string[], threadReplyIds: string[], parentMessageIds: string[]) => void): () => void;
+    onCallStarted(callback: (channelId: string, call: RawCallPayload) => void): () => void;
+    onCallUpdated(callback: (channelId: string, call: RawCallPayload) => void): () => void;
+    onCallJoined(callback: (channelId: string, call: RawCallPayload) => void): () => void;
+    onCallLeft(callback: (channelId: string, call: RawCallPayload) => void): () => void;
+    onCallDeclined(callback: (channelId: string, call: RawCallPayload) => void): () => void;
+    onCallMissed(callback: (channelId: string, call: RawCallPayload) => void): () => void;
+    onCallEnded(callback: (channelId: string, call: RawCallPayload) => void): () => void;
+    onCallRingingStopped(callback: (channelId: string, callId: string, reason: RawCallRingingStoppedReason) => void): () => void;
 }
 export declare function createFlyntlyWebSocketManager(options: FlyntlyWebSocketManagerOptions): FlyntlyWebSocketManager;
 //# sourceMappingURL=ws-client.d.ts.map

@@ -434,6 +434,30 @@ export class FlyntlyWebSocketManager {
     onAttachmentTranscodeUpdated(callback) {
         return this.callbacks.subscribe('attachmentTranscodeUpdated', callback);
     }
+    onCallStarted(callback) {
+        return this.callbacks.subscribe('callStarted', callback);
+    }
+    onCallUpdated(callback) {
+        return this.callbacks.subscribe('callUpdated', callback);
+    }
+    onCallJoined(callback) {
+        return this.callbacks.subscribe('callJoined', callback);
+    }
+    onCallLeft(callback) {
+        return this.callbacks.subscribe('callLeft', callback);
+    }
+    onCallDeclined(callback) {
+        return this.callbacks.subscribe('callDeclined', callback);
+    }
+    onCallMissed(callback) {
+        return this.callbacks.subscribe('callMissed', callback);
+    }
+    onCallEnded(callback) {
+        return this.callbacks.subscribe('callEnded', callback);
+    }
+    onCallRingingStopped(callback) {
+        return this.callbacks.subscribe('callRingingStopped', callback);
+    }
 }
 export function createFlyntlyWebSocketManager(options) {
     return new FlyntlyWebSocketManager(options);

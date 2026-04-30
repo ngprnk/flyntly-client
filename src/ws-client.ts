@@ -3,6 +3,8 @@ import type {
   RawMessageEditPayload,
   RawMessagePayload,
   RawAttachmentTranscodeUpdatePayload,
+  RawCallPayload,
+  RawCallRingingStoppedReason,
   RawPinPayload,
   PresenceState,
   PresenceUserPayload,
@@ -583,6 +585,40 @@ export class FlyntlyWebSocketManager {
     ) => void,
   ): () => void {
     return this.callbacks.subscribe('attachmentTranscodeUpdated', callback);
+  }
+
+  onCallStarted(callback: (channelId: string, call: RawCallPayload) => void): () => void {
+    return this.callbacks.subscribe('callStarted', callback);
+  }
+
+  onCallUpdated(callback: (channelId: string, call: RawCallPayload) => void): () => void {
+    return this.callbacks.subscribe('callUpdated', callback);
+  }
+
+  onCallJoined(callback: (channelId: string, call: RawCallPayload) => void): () => void {
+    return this.callbacks.subscribe('callJoined', callback);
+  }
+
+  onCallLeft(callback: (channelId: string, call: RawCallPayload) => void): () => void {
+    return this.callbacks.subscribe('callLeft', callback);
+  }
+
+  onCallDeclined(callback: (channelId: string, call: RawCallPayload) => void): () => void {
+    return this.callbacks.subscribe('callDeclined', callback);
+  }
+
+  onCallMissed(callback: (channelId: string, call: RawCallPayload) => void): () => void {
+    return this.callbacks.subscribe('callMissed', callback);
+  }
+
+  onCallEnded(callback: (channelId: string, call: RawCallPayload) => void): () => void {
+    return this.callbacks.subscribe('callEnded', callback);
+  }
+
+  onCallRingingStopped(
+    callback: (channelId: string, callId: string, reason: RawCallRingingStoppedReason) => void,
+  ): () => void {
+    return this.callbacks.subscribe('callRingingStopped', callback);
   }
 }
 
