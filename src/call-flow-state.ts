@@ -77,11 +77,15 @@ export function deriveCallPhase(call: CallRecord | null, currentUserId: string |
     ? call.participants.find((participant) => participant.userId === currentUserId)?.status ?? null
     : null;
 
-  if (participantStatus === 'joined' || call.createdBy === currentUserId || call.status === 'live') {
+  if (participantStatus === 'joined') {
     return 'live';
   }
 
-  return call.createdBy === currentUserId ? 'ringing' : 'incoming';
+  if (call.createdBy === currentUserId) {
+    return call.status === 'ringing' ? 'ringing' : 'live';
+  }
+
+  return 'incoming';
 }
 
 export function reduceCallFlowState(
@@ -233,6 +237,9 @@ export function callFlowStatusText(phase: CallFlowPhase, call: CallRecord | null
       return 'Live in this conversation';
     case 'idle':
     default:
+      if (!call) {
+        return 'Connecting...';
+      }
       return call?.status === 'ringing' ? 'Ringing' : 'Live';
   }
 }
