@@ -50,6 +50,15 @@ export interface GitHubRepository {
   private: boolean;
 }
 
+export interface GoogleDriveResource {
+  id: string;
+  resourceKey: string;
+  name: string;
+  kind: string;
+  targetResource: string;
+  webUrl?: string | null;
+}
+
 export interface InstallUrlResponse {
   installUrl: string;
   state: string;
@@ -60,10 +69,22 @@ export interface CompleteGitHubInstallRequest {
   installationId: string;
 }
 
+export interface CompleteGoogleDriveInstallRequest {
+  state: string;
+  code: string;
+}
+
 export interface SaveGitHubSubscriptionsRequest {
   installationId: string;
   channelId: string;
   repositoryIds: string[];
+  events: string[];
+}
+
+export interface SaveGoogleDriveSubscriptionsRequest {
+  installationId: string;
+  channelId: string;
+  resourceKeys: string[];
   events: string[];
 }
 
@@ -79,6 +100,10 @@ export interface GitHubRepositoriesResponse {
   repositories: GitHubRepository[];
 }
 
+export interface GoogleDriveResourcesResponse {
+  resources: GoogleDriveResource[];
+}
+
 export interface FlyntlyAppsApi {
   buildAppsUrl: (...args: BuildUrlArg[]) => string;
   listCatalog: (token: string) => Promise<AppsCatalogResponse>;
@@ -88,6 +113,11 @@ export interface FlyntlyAppsApi {
   listGitHubRepositories: (input: { token: string; installationId: string }) => Promise<GitHubRepositoriesResponse>;
   saveGitHubSubscriptions: (input: { token: string; body: SaveGitHubSubscriptionsRequest }) => Promise<AppInstallation>;
   deleteGitHubSubscription: (input: { token: string; subscriptionId: string }) => Promise<void>;
+  createGoogleDriveInstallUrl: (token: string) => Promise<InstallUrlResponse>;
+  completeGoogleDriveInstall: (input: { token: string; body: CompleteGoogleDriveInstallRequest }) => Promise<AppInstallation>;
+  listGoogleDriveResources: (input: { token: string; installationId: string }) => Promise<GoogleDriveResourcesResponse>;
+  saveGoogleDriveSubscriptions: (input: { token: string; body: SaveGoogleDriveSubscriptionsRequest }) => Promise<AppInstallation>;
+  deleteGoogleDriveSubscription: (input: { token: string; subscriptionId: string }) => Promise<void>;
 }
 
 export function createFlyntlyAppsApi(config: FlyntlyAppsApiConfig): FlyntlyAppsApi {
@@ -135,6 +165,37 @@ export function createFlyntlyAppsApi(config: FlyntlyAppsApiConfig): FlyntlyAppsA
         method: 'DELETE',
         token,
         fallbackError: 'Failed to remove GitHub subscription',
+      }),
+    createGoogleDriveInstallUrl: (token) =>
+      requestJson(buildAppsUrl('/apps/google-drive/install-url'), {
+        method: 'POST',
+        token,
+        fallbackError: 'Failed to start Google Drive installation',
+      }),
+    completeGoogleDriveInstall: ({ token, body }) =>
+      requestJson(buildAppsUrl('/apps/google-drive/complete'), {
+        method: 'POST',
+        token,
+        body,
+        fallbackError: 'Failed to finish Google Drive installation',
+      }),
+    listGoogleDriveResources: ({ token, installationId }) =>
+      requestJson(buildAppsUrl(`/apps/google-drive/installations/${installationId}/resources`), {
+        token,
+        fallbackError: 'Failed to load Google Drive resources',
+      }),
+    saveGoogleDriveSubscriptions: ({ token, body }) =>
+      requestJson(buildAppsUrl('/apps/google-drive/subscriptions'), {
+        method: 'POST',
+        token,
+        body,
+        fallbackError: 'Failed to save Google Drive subscriptions',
+      }),
+    deleteGoogleDriveSubscription: ({ token, subscriptionId }) =>
+      requestVoid(buildAppsUrl(`/apps/google-drive/subscriptions/${subscriptionId}`), {
+        method: 'DELETE',
+        token,
+        fallbackError: 'Failed to remove Google Drive subscription',
       }),
   };
 }

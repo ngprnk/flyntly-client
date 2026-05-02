@@ -42,6 +42,14 @@ export interface GitHubRepository {
     html_url: string;
     private: boolean;
 }
+export interface GoogleDriveResource {
+    id: string;
+    resourceKey: string;
+    name: string;
+    kind: string;
+    targetResource: string;
+    webUrl?: string | null;
+}
 export interface InstallUrlResponse {
     installUrl: string;
     state: string;
@@ -50,10 +58,20 @@ export interface CompleteGitHubInstallRequest {
     state: string;
     installationId: string;
 }
+export interface CompleteGoogleDriveInstallRequest {
+    state: string;
+    code: string;
+}
 export interface SaveGitHubSubscriptionsRequest {
     installationId: string;
     channelId: string;
     repositoryIds: string[];
+    events: string[];
+}
+export interface SaveGoogleDriveSubscriptionsRequest {
+    installationId: string;
+    channelId: string;
+    resourceKeys: string[];
     events: string[];
 }
 export interface AppsCatalogResponse {
@@ -64,6 +82,9 @@ export interface AppInstallationsResponse {
 }
 export interface GitHubRepositoriesResponse {
     repositories: GitHubRepository[];
+}
+export interface GoogleDriveResourcesResponse {
+    resources: GoogleDriveResource[];
 }
 export interface FlyntlyAppsApi {
     buildAppsUrl: (...args: BuildUrlArg[]) => string;
@@ -83,6 +104,23 @@ export interface FlyntlyAppsApi {
         body: SaveGitHubSubscriptionsRequest;
     }) => Promise<AppInstallation>;
     deleteGitHubSubscription: (input: {
+        token: string;
+        subscriptionId: string;
+    }) => Promise<void>;
+    createGoogleDriveInstallUrl: (token: string) => Promise<InstallUrlResponse>;
+    completeGoogleDriveInstall: (input: {
+        token: string;
+        body: CompleteGoogleDriveInstallRequest;
+    }) => Promise<AppInstallation>;
+    listGoogleDriveResources: (input: {
+        token: string;
+        installationId: string;
+    }) => Promise<GoogleDriveResourcesResponse>;
+    saveGoogleDriveSubscriptions: (input: {
+        token: string;
+        body: SaveGoogleDriveSubscriptionsRequest;
+    }) => Promise<AppInstallation>;
+    deleteGoogleDriveSubscription: (input: {
         token: string;
         subscriptionId: string;
     }) => Promise<void>;
