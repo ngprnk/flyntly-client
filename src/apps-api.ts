@@ -59,6 +59,14 @@ export interface GoogleDriveResource {
   webUrl?: string | null;
 }
 
+export interface GoogleCalendar {
+  id: string;
+  summary: string;
+  primary: boolean;
+  accessRole?: string | null;
+  backgroundColor?: string | null;
+}
+
 export interface InstallUrlResponse {
   installUrl: string;
   state: string;
@@ -74,6 +82,11 @@ export interface CompleteGoogleDriveInstallRequest {
   code: string;
 }
 
+export interface CompleteGoogleCalendarInstallRequest {
+  state: string;
+  code: string;
+}
+
 export interface SaveGitHubSubscriptionsRequest {
   installationId: string;
   channelId: string;
@@ -85,6 +98,13 @@ export interface SaveGoogleDriveSubscriptionsRequest {
   installationId: string;
   channelId: string;
   resourceKeys: string[];
+  events: string[];
+}
+
+export interface SaveGoogleCalendarSubscriptionsRequest {
+  installationId: string;
+  channelId: string;
+  calendarIds: string[];
   events: string[];
 }
 
@@ -104,6 +124,10 @@ export interface GoogleDriveResourcesResponse {
   resources: GoogleDriveResource[];
 }
 
+export interface GoogleCalendarsResponse {
+  calendars: GoogleCalendar[];
+}
+
 export interface FlyntlyAppsApi {
   buildAppsUrl: (...args: BuildUrlArg[]) => string;
   listCatalog: (token: string) => Promise<AppsCatalogResponse>;
@@ -118,6 +142,11 @@ export interface FlyntlyAppsApi {
   listGoogleDriveResources: (input: { token: string; installationId: string }) => Promise<GoogleDriveResourcesResponse>;
   saveGoogleDriveSubscriptions: (input: { token: string; body: SaveGoogleDriveSubscriptionsRequest }) => Promise<AppInstallation>;
   deleteGoogleDriveSubscription: (input: { token: string; subscriptionId: string }) => Promise<void>;
+  createGoogleCalendarInstallUrl: (token: string) => Promise<InstallUrlResponse>;
+  completeGoogleCalendarInstall: (input: { token: string; body: CompleteGoogleCalendarInstallRequest }) => Promise<AppInstallation>;
+  listGoogleCalendars: (input: { token: string; installationId: string }) => Promise<GoogleCalendarsResponse>;
+  saveGoogleCalendarSubscriptions: (input: { token: string; body: SaveGoogleCalendarSubscriptionsRequest }) => Promise<AppInstallation>;
+  deleteGoogleCalendarSubscription: (input: { token: string; subscriptionId: string }) => Promise<void>;
 }
 
 export function createFlyntlyAppsApi(config: FlyntlyAppsApiConfig): FlyntlyAppsApi {
@@ -196,6 +225,37 @@ export function createFlyntlyAppsApi(config: FlyntlyAppsApiConfig): FlyntlyAppsA
         method: 'DELETE',
         token,
         fallbackError: 'Failed to remove Google Drive subscription',
+      }),
+    createGoogleCalendarInstallUrl: (token) =>
+      requestJson(buildAppsUrl('/apps/google-calendar/install-url'), {
+        method: 'POST',
+        token,
+        fallbackError: 'Failed to start Google Calendar installation',
+      }),
+    completeGoogleCalendarInstall: ({ token, body }) =>
+      requestJson(buildAppsUrl('/apps/google-calendar/complete'), {
+        method: 'POST',
+        token,
+        body,
+        fallbackError: 'Failed to finish Google Calendar installation',
+      }),
+    listGoogleCalendars: ({ token, installationId }) =>
+      requestJson(buildAppsUrl(`/apps/google-calendar/installations/${installationId}/calendars`), {
+        token,
+        fallbackError: 'Failed to load Google calendars',
+      }),
+    saveGoogleCalendarSubscriptions: ({ token, body }) =>
+      requestJson(buildAppsUrl('/apps/google-calendar/subscriptions'), {
+        method: 'POST',
+        token,
+        body,
+        fallbackError: 'Failed to save Google Calendar subscriptions',
+      }),
+    deleteGoogleCalendarSubscription: ({ token, subscriptionId }) =>
+      requestVoid(buildAppsUrl(`/apps/google-calendar/subscriptions/${subscriptionId}`), {
+        method: 'DELETE',
+        token,
+        fallbackError: 'Failed to remove Google Calendar subscription',
       }),
   };
 }

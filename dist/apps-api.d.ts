@@ -50,6 +50,13 @@ export interface GoogleDriveResource {
     targetResource: string;
     webUrl?: string | null;
 }
+export interface GoogleCalendar {
+    id: string;
+    summary: string;
+    primary: boolean;
+    accessRole?: string | null;
+    backgroundColor?: string | null;
+}
 export interface InstallUrlResponse {
     installUrl: string;
     state: string;
@@ -59,6 +66,10 @@ export interface CompleteGitHubInstallRequest {
     installationId: string;
 }
 export interface CompleteGoogleDriveInstallRequest {
+    state: string;
+    code: string;
+}
+export interface CompleteGoogleCalendarInstallRequest {
     state: string;
     code: string;
 }
@@ -74,6 +85,12 @@ export interface SaveGoogleDriveSubscriptionsRequest {
     resourceKeys: string[];
     events: string[];
 }
+export interface SaveGoogleCalendarSubscriptionsRequest {
+    installationId: string;
+    channelId: string;
+    calendarIds: string[];
+    events: string[];
+}
 export interface AppsCatalogResponse {
     apps: AppCatalogItem[];
 }
@@ -85,6 +102,9 @@ export interface GitHubRepositoriesResponse {
 }
 export interface GoogleDriveResourcesResponse {
     resources: GoogleDriveResource[];
+}
+export interface GoogleCalendarsResponse {
+    calendars: GoogleCalendar[];
 }
 export interface FlyntlyAppsApi {
     buildAppsUrl: (...args: BuildUrlArg[]) => string;
@@ -121,6 +141,23 @@ export interface FlyntlyAppsApi {
         body: SaveGoogleDriveSubscriptionsRequest;
     }) => Promise<AppInstallation>;
     deleteGoogleDriveSubscription: (input: {
+        token: string;
+        subscriptionId: string;
+    }) => Promise<void>;
+    createGoogleCalendarInstallUrl: (token: string) => Promise<InstallUrlResponse>;
+    completeGoogleCalendarInstall: (input: {
+        token: string;
+        body: CompleteGoogleCalendarInstallRequest;
+    }) => Promise<AppInstallation>;
+    listGoogleCalendars: (input: {
+        token: string;
+        installationId: string;
+    }) => Promise<GoogleCalendarsResponse>;
+    saveGoogleCalendarSubscriptions: (input: {
+        token: string;
+        body: SaveGoogleCalendarSubscriptionsRequest;
+    }) => Promise<AppInstallation>;
+    deleteGoogleCalendarSubscription: (input: {
         token: string;
         subscriptionId: string;
     }) => Promise<void>;

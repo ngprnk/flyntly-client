@@ -64,6 +64,32 @@ export function createFlyntlyAppsApi(config) {
             token,
             fallbackError: 'Failed to remove Google Drive subscription',
         }),
+        createGoogleCalendarInstallUrl: (token) => requestJson(buildAppsUrl('/apps/google-calendar/install-url'), {
+            method: 'POST',
+            token,
+            fallbackError: 'Failed to start Google Calendar installation',
+        }),
+        completeGoogleCalendarInstall: ({ token, body }) => requestJson(buildAppsUrl('/apps/google-calendar/complete'), {
+            method: 'POST',
+            token,
+            body,
+            fallbackError: 'Failed to finish Google Calendar installation',
+        }),
+        listGoogleCalendars: ({ token, installationId }) => requestJson(buildAppsUrl(`/apps/google-calendar/installations/${installationId}/calendars`), {
+            token,
+            fallbackError: 'Failed to load Google calendars',
+        }),
+        saveGoogleCalendarSubscriptions: ({ token, body }) => requestJson(buildAppsUrl('/apps/google-calendar/subscriptions'), {
+            method: 'POST',
+            token,
+            body,
+            fallbackError: 'Failed to save Google Calendar subscriptions',
+        }),
+        deleteGoogleCalendarSubscription: ({ token, subscriptionId }) => requestVoid(buildAppsUrl(`/apps/google-calendar/subscriptions/${subscriptionId}`), {
+            method: 'DELETE',
+            token,
+            fallbackError: 'Failed to remove Google Calendar subscription',
+        }),
     };
 }
 //# sourceMappingURL=apps-api.js.map
