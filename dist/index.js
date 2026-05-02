@@ -4,6 +4,7 @@ export * from './auth-api.js';
 export * from './user-api.js';
 export * from './org-api.js';
 export * from './chat-api.js';
+export * from './apps-api.js';
 export * from './call-flow-state.js';
 export * from './call-timing.js';
 export * from './ws-types.js';
