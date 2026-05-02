@@ -18,6 +18,8 @@ export interface AppCatalogItem {
 export interface AppSubscription {
     id: string;
     channelId: string;
+    createdBy: string;
+    canManage: boolean;
     externalResourceId: string;
     externalResourceName: string;
     events: string[];
@@ -27,6 +29,8 @@ export interface AppInstallation {
     appId: string;
     provider: string;
     status: string;
+    installedBy: string;
+    canManage: boolean;
     externalInstallationId?: string | null;
     externalAccountLogin?: string | null;
     externalAccountType?: string | null;
