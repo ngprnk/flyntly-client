@@ -61,6 +61,14 @@ export interface GoogleCalendar {
     accessRole?: string | null;
     backgroundColor?: string | null;
 }
+export interface VercelProject {
+    id: string;
+    name: string;
+    teamId?: string | null;
+    teamName?: string | null;
+    framework?: string | null;
+    projectUrl?: string | null;
+}
 export interface InstallUrlResponse {
     installUrl: string;
     state: string;
@@ -74,6 +82,10 @@ export interface CompleteGoogleDriveInstallRequest {
     code: string;
 }
 export interface CompleteGoogleCalendarInstallRequest {
+    state: string;
+    code: string;
+}
+export interface CompleteVercelInstallRequest {
     state: string;
     code: string;
 }
@@ -95,6 +107,13 @@ export interface SaveGoogleCalendarSubscriptionsRequest {
     calendarIds: string[];
     events: string[];
 }
+export interface SaveVercelSubscriptionsRequest {
+    installationId: string;
+    channelId: string;
+    projectIds: string[];
+    events: string[];
+    target: string;
+}
 export interface AppsCatalogResponse {
     apps: AppCatalogItem[];
 }
@@ -109,6 +128,9 @@ export interface GoogleDriveResourcesResponse {
 }
 export interface GoogleCalendarsResponse {
     calendars: GoogleCalendar[];
+}
+export interface VercelProjectsResponse {
+    projects: VercelProject[];
 }
 export interface FlyntlyAppsApi {
     buildAppsUrl: (...args: BuildUrlArg[]) => string;
@@ -162,6 +184,23 @@ export interface FlyntlyAppsApi {
         body: SaveGoogleCalendarSubscriptionsRequest;
     }) => Promise<AppInstallation>;
     deleteGoogleCalendarSubscription: (input: {
+        token: string;
+        subscriptionId: string;
+    }) => Promise<void>;
+    createVercelInstallUrl: (token: string) => Promise<InstallUrlResponse>;
+    completeVercelInstall: (input: {
+        token: string;
+        body: CompleteVercelInstallRequest;
+    }) => Promise<AppInstallation>;
+    listVercelProjects: (input: {
+        token: string;
+        installationId: string;
+    }) => Promise<VercelProjectsResponse>;
+    saveVercelSubscriptions: (input: {
+        token: string;
+        body: SaveVercelSubscriptionsRequest;
+    }) => Promise<AppInstallation>;
+    deleteVercelSubscription: (input: {
         token: string;
         subscriptionId: string;
     }) => Promise<void>;

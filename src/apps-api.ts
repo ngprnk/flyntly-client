@@ -71,6 +71,15 @@ export interface GoogleCalendar {
   backgroundColor?: string | null;
 }
 
+export interface VercelProject {
+  id: string;
+  name: string;
+  teamId?: string | null;
+  teamName?: string | null;
+  framework?: string | null;
+  projectUrl?: string | null;
+}
+
 export interface InstallUrlResponse {
   installUrl: string;
   state: string;
@@ -87,6 +96,11 @@ export interface CompleteGoogleDriveInstallRequest {
 }
 
 export interface CompleteGoogleCalendarInstallRequest {
+  state: string;
+  code: string;
+}
+
+export interface CompleteVercelInstallRequest {
   state: string;
   code: string;
 }
@@ -112,6 +126,14 @@ export interface SaveGoogleCalendarSubscriptionsRequest {
   events: string[];
 }
 
+export interface SaveVercelSubscriptionsRequest {
+  installationId: string;
+  channelId: string;
+  projectIds: string[];
+  events: string[];
+  target: string;
+}
+
 export interface AppsCatalogResponse {
   apps: AppCatalogItem[];
 }
@@ -130,6 +152,10 @@ export interface GoogleDriveResourcesResponse {
 
 export interface GoogleCalendarsResponse {
   calendars: GoogleCalendar[];
+}
+
+export interface VercelProjectsResponse {
+  projects: VercelProject[];
 }
 
 export interface FlyntlyAppsApi {
@@ -151,6 +177,11 @@ export interface FlyntlyAppsApi {
   listGoogleCalendars: (input: { token: string; installationId: string }) => Promise<GoogleCalendarsResponse>;
   saveGoogleCalendarSubscriptions: (input: { token: string; body: SaveGoogleCalendarSubscriptionsRequest }) => Promise<AppInstallation>;
   deleteGoogleCalendarSubscription: (input: { token: string; subscriptionId: string }) => Promise<void>;
+  createVercelInstallUrl: (token: string) => Promise<InstallUrlResponse>;
+  completeVercelInstall: (input: { token: string; body: CompleteVercelInstallRequest }) => Promise<AppInstallation>;
+  listVercelProjects: (input: { token: string; installationId: string }) => Promise<VercelProjectsResponse>;
+  saveVercelSubscriptions: (input: { token: string; body: SaveVercelSubscriptionsRequest }) => Promise<AppInstallation>;
+  deleteVercelSubscription: (input: { token: string; subscriptionId: string }) => Promise<void>;
 }
 
 export function createFlyntlyAppsApi(config: FlyntlyAppsApiConfig): FlyntlyAppsApi {
@@ -260,6 +291,37 @@ export function createFlyntlyAppsApi(config: FlyntlyAppsApiConfig): FlyntlyAppsA
         method: 'DELETE',
         token,
         fallbackError: 'Failed to remove Google Calendar subscription',
+      }),
+    createVercelInstallUrl: (token) =>
+      requestJson(buildAppsUrl('/apps/vercel/install-url'), {
+        method: 'POST',
+        token,
+        fallbackError: 'Failed to start Vercel installation',
+      }),
+    completeVercelInstall: ({ token, body }) =>
+      requestJson(buildAppsUrl('/apps/vercel/complete'), {
+        method: 'POST',
+        token,
+        body,
+        fallbackError: 'Failed to finish Vercel installation',
+      }),
+    listVercelProjects: ({ token, installationId }) =>
+      requestJson(buildAppsUrl(`/apps/vercel/installations/${installationId}/projects`), {
+        token,
+        fallbackError: 'Failed to load Vercel projects',
+      }),
+    saveVercelSubscriptions: ({ token, body }) =>
+      requestJson(buildAppsUrl('/apps/vercel/subscriptions'), {
+        method: 'POST',
+        token,
+        body,
+        fallbackError: 'Failed to save Vercel subscriptions',
+      }),
+    deleteVercelSubscription: ({ token, subscriptionId }) =>
+      requestVoid(buildAppsUrl(`/apps/vercel/subscriptions/${subscriptionId}`), {
+        method: 'DELETE',
+        token,
+        fallbackError: 'Failed to remove Vercel subscription',
       }),
   };
 }

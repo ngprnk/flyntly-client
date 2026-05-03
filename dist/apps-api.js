@@ -90,6 +90,32 @@ export function createFlyntlyAppsApi(config) {
             token,
             fallbackError: 'Failed to remove Google Calendar subscription',
         }),
+        createVercelInstallUrl: (token) => requestJson(buildAppsUrl('/apps/vercel/install-url'), {
+            method: 'POST',
+            token,
+            fallbackError: 'Failed to start Vercel installation',
+        }),
+        completeVercelInstall: ({ token, body }) => requestJson(buildAppsUrl('/apps/vercel/complete'), {
+            method: 'POST',
+            token,
+            body,
+            fallbackError: 'Failed to finish Vercel installation',
+        }),
+        listVercelProjects: ({ token, installationId }) => requestJson(buildAppsUrl(`/apps/vercel/installations/${installationId}/projects`), {
+            token,
+            fallbackError: 'Failed to load Vercel projects',
+        }),
+        saveVercelSubscriptions: ({ token, body }) => requestJson(buildAppsUrl('/apps/vercel/subscriptions'), {
+            method: 'POST',
+            token,
+            body,
+            fallbackError: 'Failed to save Vercel subscriptions',
+        }),
+        deleteVercelSubscription: ({ token, subscriptionId }) => requestVoid(buildAppsUrl(`/apps/vercel/subscriptions/${subscriptionId}`), {
+            method: 'DELETE',
+            token,
+            fallbackError: 'Failed to remove Vercel subscription',
+        }),
     };
 }
 //# sourceMappingURL=apps-api.js.map
